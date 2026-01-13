@@ -1,9 +1,47 @@
 """
-Initialize prompts in database from text files (one-time setup)
+Initialize prompts and settings in database from text files (one-time setup)
 """
 import os
-from database import Database, Prompt
+from database import Database, Prompt, Setting
 from sqlalchemy import select
+
+def initialize_settings():
+    """Initialize default app settings"""
+    db = Database()
+
+    default_settings = [
+        {
+            'key': 'assignment',
+            'value': 'Write a research paper on a technical topic of your choice. The paper should demonstrate your understanding of the subject, include proper citations, and present a clear argument or analysis.',
+            'description': 'Assignment description shown on the upload page'
+        }
+    ]
+
+    with db.Session() as session:
+        for setting_info in default_settings:
+            # Check if already exists
+            existing = session.execute(
+                select(Setting).where(Setting.key == setting_info['key'])
+            ).scalar_one_or_none()
+
+            if existing:
+                print(f"[SKIP] Setting '{setting_info['key']}' already exists")
+                continue
+
+            # Create new setting
+            new_setting = Setting(
+                key=setting_info['key'],
+                value=setting_info['value'],
+                description=setting_info['description']
+            )
+
+            session.add(new_setting)
+            print(f"[OK] Initialized setting: {setting_info['key']}")
+
+        session.commit()
+
+    print("\n[COMPLETE] Settings initialized in database")
+
 
 def initialize_prompts():
     """Load prompts from text files into database"""
@@ -113,7 +151,9 @@ Be professional, probing, and fair. Your goal is to assess genuine understanding
 
 if __name__ == '__main__':
     print("="*60)
-    print(" INITIALIZING PROMPTS IN DATABASE")
+    print(" INITIALIZING PROMPTS AND SETTINGS IN DATABASE")
     print("="*60)
     print()
     initialize_prompts()
+    print()
+    initialize_settings()

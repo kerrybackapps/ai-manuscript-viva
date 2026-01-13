@@ -138,6 +138,26 @@ class Prompt(Base):
         }
 
 
+class Setting(Base):
+    """Application settings - stores configurable text and values"""
+    __tablename__ = 'settings'
+
+    key = Column(String(100), primary_key=True)
+    value = Column(Text, nullable=False)
+    description = Column(Text)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = Column(String(100), default='admin')
+
+    def to_dict(self):
+        return {
+            'key': self.key,
+            'value': self.value,
+            'description': self.description,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'updated_by': self.updated_by
+        }
+
+
 class Database:
     """Database manager"""
 

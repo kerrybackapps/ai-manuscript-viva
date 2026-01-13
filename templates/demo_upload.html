@@ -146,7 +146,17 @@
 </head>
 <body>
     <div class="container">
-        <a href="/" class="btn-back">← Back to Home</a>
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 20px;">
+            <h1 style="color: white; font-size: 32px;">🎓 AI Manuscript Viva</h1>
+            <p style="opacity: 0.95; margin-top: 10px; font-size: 16px;">Upload your manuscript and take an oral examination with AI</p>
+        </div>
+
+        {% if assignment %}
+        <div class="card" style="background: #f7fafc; border: 2px solid #e2e8f0; margin-bottom: 20px;">
+            <h2 style="color: #2d3748; margin-bottom: 10px; font-size: 20px;">📋 Assignment</h2>
+            <p style="color: #4a5568; line-height: 1.6; margin: 0;">{{ assignment }}</p>
+        </div>
+        {% endif %}
 
         <div class="card">
             <h1>Upload Manuscript</h1>
@@ -156,11 +166,6 @@
                 <div class="form-group">
                     <label for="student_name">Your Name</label>
                     <input type="text" id="student_name" name="student_name" required placeholder="Enter your full name">
-                </div>
-
-                <div class="form-group">
-                    <label for="assignment">Assignment Description</label>
-                    <textarea id="assignment" name="assignment" required placeholder="Briefly describe the assignment (e.g., 'Write a research paper on AI applications in healthcare')"></textarea>
                 </div>
 
                 <div class="form-group">

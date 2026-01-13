@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Settings - Admin</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f7fafc;
+        }
+        .card-header h2 {
+            margin: 0;
+            color: #2d3748;
+        }
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .setting-card {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+        .setting-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+        .setting-card h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .setting-card p {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn-back {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.2);
+        }
+        .btn-back:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>⚙️ App Settings</h1>
+            <a href="/admin/dashboard" class="btn-back">← Back to Dashboard</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2>Editable Settings</h2>
+            </div>
+            <div class="settings-grid">
+                {% for setting in settings %}
+                <div class="setting-card">
+                    <div class="icon">⚙️</div>
+                    <h3>{{ setting.key.replace('_', ' ').title() }}</h3>
+                    <p>{{ setting.description }}</p>
+                    <p style="font-size: 12px; color: #a0aec0; margin-top: 5px;">Last updated: {{ setting.updated_at[:10] if setting.updated_at else 'N/A' }}</p>
+                    <a href="/admin/settings/{{ setting.key }}" class="btn btn-primary">
+                        Edit {{ setting.key.replace('_', ' ').title() }}
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>ℹ️ About Settings</h2>
+            </div>
+            <div style="padding: 20px; color: #4a5568; line-height: 1.6;">
+                <p style="margin-bottom: 15px;">
+                    <strong>Assignment:</strong> This text appears on the upload page, explaining to students what kind of manuscript they should submit. Changes take effect immediately for all new uploads.
+                </p>
+                <p>
+                    All settings are stored in the database and persist across deployments. No rebuild required after editing.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

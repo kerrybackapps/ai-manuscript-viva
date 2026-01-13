@@ -5,9 +5,10 @@ import os
 from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for
 from werkzeug.utils import secure_filename
 from manuscript_viva_system import ManuscriptVivaSystem
-from database import Database
+from database import Database, Setting
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from sqlalchemy import select
 
 load_dotenv()
 
@@ -34,14 +35,31 @@ def allowed_file(filename):
 @app.route('/')
 def index():
     """Upload manuscript page"""
-    return render_template('demo_upload.html')
+    # Fetch assignment from database
+    assignment = "Write a research paper on a technical topic of your choice."  # Default fallback
+    with db.Session() as session:
+        setting = session.execute(
+            select(Setting).where(Setting.key == 'assignment')
+        ).scalar_one_or_none()
+        if setting:
+            assignment = setting.value
+
+    return render_template('demo_upload.html', assignment=assignment)
 
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     """Upload manuscript and create exam session"""
     if request.method == 'GET':
-        return render_template('demo_upload.html')
+        # Fetch assignment from database
+        assignment = "Write a research paper on a technical topic of your choice."  # Default fallback
+        with db.Session() as session:
+            setting = session.execute(
+                select(Setting).where(Setting.key == 'assignment')
+            ).scalar_one_or_none()
+            if setting:
+                assignment = setting.value
+        return render_template('demo_upload.html', assignment=assignment)
 
     # Handle POST - file upload
     if 'manuscript' not in request.files:
@@ -56,7 +74,15 @@ def upload():
 
     # Get form data
     student_name = request.form.get('student_name', 'Demo User')
-    assignment = request.form.get('assignment', 'Research paper on a technical topic')
+
+    # Get assignment from database
+    assignment = "Research paper on a technical topic"  # Default fallback
+    with db.Session() as session:
+        setting = session.execute(
+            select(Setting).where(Setting.key == 'assignment')
+        ).scalar_one_or_none()
+        if setting:
+            assignment = setting.value
 
     # Save uploaded file
     filename = secure_filename(file.filename)

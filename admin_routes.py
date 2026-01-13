@@ -3,7 +3,7 @@ Admin Control Panel Routes
 """
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from functools import wraps
-from database import Database, ExamSession, GradingResult, Student
+from database import Database, ExamSession, GradingResult, Student, Setting
 from sqlalchemy import select, desc
 import os
 from admin_config import ADMIN_PASSWORD, PROMPTS_DIR
@@ -227,3 +227,43 @@ def api_update_prompt(prompt_name):
         s.commit()
 
         return jsonify({'success': True, 'message': 'Prompt updated successfully', 'version': prompt.version})
+
+
+@admin_bp.route('/settings')
+@admin_required
+def settings():
+    """View and edit app settings"""
+    with db.Session() as s:
+        all_settings = s.execute(select(Setting).order_by(Setting.key)).scalars().all()
+        settings_list = [setting.to_dict() for setting in all_settings]
+
+    return render_template('admin_settings.html', settings=settings_list)
+
+
+@admin_bp.route('/settings/<setting_key>', methods=['GET', 'POST'])
+@admin_required
+def edit_setting(setting_key):
+    """Edit a specific setting"""
+    with db.Session() as s:
+        setting = s.execute(
+            select(Setting).where(Setting.key == setting_key)
+        ).scalar_one_or_none()
+
+        if not setting:
+            return jsonify({'error': 'Setting not found'}), 404
+
+        if request.method == 'POST':
+            value = request.form.get('value', '')
+            setting.value = value
+            setting.updated_by = 'admin'
+            s.commit()
+            return jsonify({'success': True, 'message': 'Setting updated successfully'})
+
+        # GET request - return editor page
+        setting_data = setting.to_dict()
+
+    return render_template('admin_setting_editor.html',
+                         setting_key=setting_key,
+                         display_name=setting_key.replace('_', ' ').title(),
+                         value=setting_data['value'],
+                         description=setting_data.get('description', ''))
