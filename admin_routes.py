@@ -16,14 +16,19 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not session.get('admin_logged_in'):
-            return redirect(url_for('admin.login'))
+            return redirect(url_for('admin.admin_home'))
         return f(*args, **kwargs)
     return decorated_function
 
 
-@admin_bp.route('/login', methods=['GET', 'POST'])
-def login():
-    """Admin login page"""
+@admin_bp.route('/', methods=['GET', 'POST'])
+def admin_home():
+    """Admin login page - redirects to dashboard if already logged in"""
+    # If already logged in, redirect to dashboard
+    if session.get('admin_logged_in'):
+        return redirect(url_for('admin.dashboard'))
+
+    # Otherwise show login form
     if request.method == 'POST':
         password = request.form.get('password')
         if password == ADMIN_PASSWORD:
@@ -39,7 +44,7 @@ def login():
 def logout():
     """Admin logout"""
     session.pop('admin_logged_in', None)
-    return redirect(url_for('admin.login'))
+    return redirect(url_for('admin.admin_home'))
 
 
 @admin_bp.route('/dashboard')

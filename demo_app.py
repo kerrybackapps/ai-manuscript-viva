@@ -33,8 +33,8 @@ def allowed_file(filename):
 
 @app.route('/')
 def index():
-    """Landing page with demo instructions"""
-    return render_template('demo_index.html')
+    """Upload manuscript page"""
+    return render_template('demo_upload.html')
 
 
 @app.route('/upload', methods=['GET', 'POST'])
