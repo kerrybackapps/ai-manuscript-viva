@@ -50,15 +50,36 @@ After deployment completes, Koyeb will provide a public URL:
 
 ## Step 8: Initialize Database
 
-After first deployment, initialize prompts by visiting:
-- The app will auto-create database tables on first run
-- Run `initialize_prompts.py` if prompts aren't auto-loaded
+After first deployment, initialize prompts and settings:
+
+**Option 1: Automatic (Recommended)**
+- Visit the app URL - database tables auto-create on first run
+- Login to admin panel at `/admin`
+- If prompts/settings are missing, run Option 2
+
+**Option 2: Manual**
+```bash
+python initialize_prompts.py
+```
+
+This creates:
+- All prompt templates (manuscript analysis, examiner agent, rubrics)
+- Default assignment text (editable via admin panel)
 
 ## Access Your App
 
-- **Upload manuscripts**: `https://your-app.koyeb.app/` (main page)
+- **Upload page**: `https://your-app.koyeb.app/` (shows assignment and upload form)
 - **Admin panel**: `https://your-app.koyeb.app/admin`
 - **Admin password**: `password`
+
+## Admin Panel Features
+
+After logging in to `/admin`, you can:
+- **Dashboard** - View all exam sessions with scores from all 3 graders
+- **Exam Details** - See full transcripts and detailed grading assessments
+- **Edit Prompts** - Modify exam questions and grading rubrics
+- **Edit Settings** - Change assignment text shown to students
+- All changes persist across deployments (no rebuild needed)
 
 ## Auto-Deploy
 
