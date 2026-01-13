@@ -510,7 +510,6 @@ Key Claims: {', '.join(analysis.get('key_claims', []))}
         <h2>📋 Examination Instructions</h2>
         <ol>
             <li><strong>The AI examiner has read your entire manuscript</strong></li>
-            <li>Click the voice icon below to begin the oral examination</li>
             <li>The examiner will ask 10-12 questions testing your understanding</li>
             <li>Questions will reference specific parts of your work</li>
             <li>Answer thoughtfully and honestly</li>
@@ -532,9 +531,16 @@ Key Claims: {', '.join(analysis.get('key_claims', []))}
 
     <div class="widget-container">
         <h3>🎙️ Begin Oral Examination</h3>
-        <p style="color: #718096; margin-bottom: 24px;">
-            Click the microphone icon to start speaking with the examiner
+        <p style="color: #718096; margin-bottom: 16px;">
+            <strong>To start the exam:</strong>
         </p>
+        <ol style="text-align: left; display: inline-block; margin-bottom: 24px; color: #4a5568;">
+            <li>Click the <strong>"Start a call"</strong> button below</li>
+            <li>Click the <strong>telephone icon</strong> to connect</li>
+            <li>Wait for "Listening..." to appear</li>
+            <li>The examiner will greet you and ask the first question</li>
+            <li>Speak clearly when answering</li>
+        </ol>
 
         <elevenlabs-convai agent-id="{agent_id}"></elevenlabs-convai>
         <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async></script>

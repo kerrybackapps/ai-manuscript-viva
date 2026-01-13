@@ -39,5 +39,8 @@ Thumbs.db
 *.log
 transcripts/
 
+# CLI tools
+koyeb.exe
+
 # Keep sample files
 !sample_manuscripts/*.txt
