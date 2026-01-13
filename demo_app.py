@@ -6,17 +6,26 @@ from flask import Flask, render_template, request, jsonify, send_file, redirect,
 from werkzeug.utils import secure_filename
 from manuscript_viva_system import ManuscriptVivaSystem
 from database import Database
-from datetime import datetime
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'docx'}
 
 os.makedirs('uploads', exist_ok=True)
 
 db = Database()
 system = ManuscriptVivaSystem()
+
+# Register admin blueprint
+from admin_routes import admin_bp
+app.register_blueprint(admin_bp)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

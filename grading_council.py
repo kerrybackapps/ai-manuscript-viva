@@ -7,13 +7,13 @@ import json
 from typing import Dict, List, Tuple
 from anthropic import Anthropic
 from openai import OpenAI
+from dotenv import load_dotenv
 
-# Make Google Gemini optional
+load_dotenv()
+
 try:
     import google.generativeai as genai
-    GEMINI_AVAILABLE = True
 except ImportError:
-    GEMINI_AVAILABLE = False
     genai = None
 
 
@@ -23,27 +23,27 @@ class GradingCouncil:
     def __init__(self):
         # Support multiple Anthropic key name variations
         anthropic_key = os.getenv('ANTHROPIC_API_KEY') or os.getenv('ANTHROPIC_KEY') or os.getenv('CLAUDE')
-        self.claude_client = Anthropic(api_key=anthropic_key) if anthropic_key else None
+        if not anthropic_key:
+            raise ValueError("ANTHROPIC_KEY is required. Add to .env file.")
+        self.claude_client = Anthropic(api_key=anthropic_key)
 
         openai_key = os.getenv('OPENAI_API_KEY')
-        self.openai_client = OpenAI(api_key=openai_key) if openai_key else None
+        if not openai_key:
+            raise ValueError("OPENAI_API_KEY is required. Add to .env file.")
+        self.openai_client = OpenAI(api_key=openai_key)
 
-        # Gemini is optional - support multiple key names
+        # Gemini - support multiple key names
         google_key = os.getenv('GOOGLE_API_KEY') or os.getenv('GEMINI_KEY')
-        if google_key and GEMINI_AVAILABLE:
-            genai.configure(api_key=google_key)
-            self.gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
-        else:
-            self.gemini_model = None
+        if not google_key:
+            raise ValueError("GEMINI_KEY is required. Add to .env file.")
+        if not genai:
+            raise ImportError("google-generativeai package not installed. Run: pip install google-generativeai")
 
-        # Track which models are available
-        self.available_models = []
-        if self.claude_client:
-            self.available_models.append('claude')
-        if self.openai_client:
-            self.available_models.append('gpt')
-        if self.gemini_model:
-            self.available_models.append('gemini')
+        genai.configure(api_key=google_key)
+        self.gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
+
+        # All three models are required
+        self.available_models = ['claude', 'gpt', 'gemini']
 
     def get_grading_prompt(self, transcript: str, rubric: str) -> str:
         """Generate the grading prompt"""

@@ -110,6 +110,34 @@ class Scenario(Base):
         }
 
 
+class Prompt(Base):
+    """Prompt template model - stores editable prompts and rubrics"""
+    __tablename__ = 'prompts'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True, nullable=False)  # e.g., 'manuscript_analysis'
+    display_name = Column(String(200), nullable=False)  # e.g., 'Manuscript Analysis Prompt'
+    description = Column(Text)
+    content = Column(Text, nullable=False)
+    category = Column(String(50))  # 'prompt', 'rubric'
+    version = Column(Integer, default=1)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = Column(String(100), default='admin')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'display_name': self.display_name,
+            'description': self.description,
+            'content': self.content,
+            'category': self.category,
+            'version': self.version,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'updated_by': self.updated_by
+        }
+
+
 class Database:
     """Database manager"""
 
