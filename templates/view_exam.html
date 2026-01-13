@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Exam #{{ exam.id }} - AI Exam System{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 24px;">Exam Session #{{ exam.id }}</h1>
+
+<div class="card">
+    <h2>Exam Information</h2>
+    <table style="margin-top: 16px;">
+        <tr>
+            <td style="font-weight: 600; width: 200px;">Student</td>
+            <td>{{ exam.student_name }} ({{ exam.student_id }})</td>
+        </tr>
+        <tr>
+            <td style="font-weight: 600;">Exam Type</td>
+            <td>{{ exam.exam_type }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: 600;">Status</td>
+            <td><span class="badge badge-{{ exam.status }}">{{ exam.status }}</span></td>
+        </tr>
+        <tr>
+            <td style="font-weight: 600;">Started</td>
+            <td>{{ exam.started_at[:19] if exam.started_at else 'N/A' }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: 600;">Completed</td>
+            <td>{{ exam.completed_at[:19] if exam.completed_at else 'N/A' }}</td>
+        </tr>
+    </table>
+</div>
+
+{% if convergence %}
+<div class="card">
+    <h2>Grading Results - Convergence Analysis</h2>
+    <div class="stats-grid" style="margin-top: 16px;">
+        <div class="stat-card">
+            <h3>Average Score</h3>
+            <div class="value">{{ convergence.average }}/4.0</div>
+        </div>
+        <div class="stat-card">
+            <h3>Within 1-Point Agreement</h3>
+            <div class="value">{{ '✓' if convergence.within_1_point else '✗' }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>Score Range</h3>
+            <div class="value" style="font-size: 20px;">{{ convergence.range }}</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if grades_by_round %}
+<div class="card">
+    <h2>Detailed Grading</h2>
+
+    {% for round_num, round_grades in grades_by_round.items()|sort %}
+    <div style="margin-top: 24px;">
+        <h3 style="color: #2c3e50;">Round {{ round_num }}</h3>
+
+        <div class="stats-grid" style="margin-top: 16px;">
+            {% for model_name, grade in round_grades.items() %}
+            <div class="stat-card">
+                <h3>{{ model_name.upper() }}</h3>
+                <div class="value" style="font-size: 28px;">{{ grade.overall_score if grade.overall_score else 'N/A' }}</div>
+                <p style="margin-top: 8px; font-size: 14px; color: #7f8c8d;">
+                    {{ grade.assessment[:100] if grade.assessment else '' }}{% if grade.assessment and grade.assessment|length > 100 %}...{% endif %}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card">
+    <h2>Full Assessments</h2>
+    {% for round_num, round_grades in grades_by_round.items()|sort %}
+        {% if loop.last %}
+        {% for model_name, grade in round_grades.items() %}
+        <div style="margin-top: 20px; padding: 16px; background-color: #f8f9fa; border-radius: 4px;">
+            <h3 style="color: #2c3e50; margin-bottom: 8px;">{{ model_name.upper() }} - Score: {{ grade.overall_score }}/4.0</h3>
+            <p style="line-height: 1.6;">{{ grade.assessment }}</p>
+
+            {% if grade.category_scores %}
+            <div style="margin-top: 12px;">
+                <strong>Category Scores:</strong>
+                <ul style="margin-left: 20px; margin-top: 8px;">
+                    {% for category, details in grade.category_scores.items() %}
+                    <li><strong>{{ category }}:</strong> {{ details.score if details.score else 'N/A' }} - {{ details.justification if details.justification else '' }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if exam.transcript %}
+<div class="card">
+    <h2>Exam Transcript</h2>
+    <div style="background-color: #f8f9fa; padding: 16px; border-radius: 4px; margin-top: 16px; max-height: 600px; overflow-y: auto;">
+        <pre style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.5;">{{ exam.transcript }}</pre>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <h2>Exam Transcript</h2>
+    <p style="color: #7f8c8d; margin-top: 16px;">No transcript available. <a href="/exams/{{ exam.id }}/conduct">Conduct exam</a></p>
+</div>
+{% endif %}
+
+<div style="margin-top: 24px; margin-bottom: 24px;">
+    <a href="/exams" class="btn">Back to Exams</a>
+    <a href="/students/{{ exam.student_id }}" class="btn">View Student</a>
+    {% if exam.status != 'completed' %}
+    <a href="/exams/{{ exam.id }}/conduct" class="btn btn-success">Continue Exam</a>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+GRADING RUBRIC - Machine Learning Fundamentals
+
+Evaluate the student on a 4-point scale for each category:
+4 = Excellent: Deep understanding, can explain nuances and trade-offs
+3 = Good: Solid understanding, can explain concepts correctly
+2 = Fair: Basic understanding, some gaps or misconceptions
+1 = Poor: Limited understanding, significant gaps
+0 = No evidence of understanding
+
+CATEGORIES:
+
+1. Conceptual Understanding (Weight: 35%)
+   - Can the student explain core ML concepts clearly?
+   - Do they understand the underlying mathematics/theory?
+   - Can they distinguish between related concepts?
+
+2. Practical Application (Weight: 25%)
+   - Can the student apply concepts to real scenarios?
+   - Do they understand when to use different techniques?
+   - Can they reason about model choices?
+
+3. Critical Thinking (Weight: 25%)
+   - Does the student recognize limitations and failure modes?
+   - Can they identify potential issues or biases?
+   - Do they consider trade-offs and alternatives?
+
+4. Communication (Weight: 15%)
+   - Can the student explain technical concepts clearly?
+   - Do they use appropriate terminology?
+   - Can they provide concrete examples?
+
+OVERALL SCORE:
+Calculate weighted average and round to 1 decimal place (0.0 - 4.0 scale)

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Exams - AI Exam System{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h1>All Exams</h1>
+    <a href="/exams/start" class="btn btn-success">Start New Exam</a>
+</div>
+
+<div class="card">
+    {% if exams %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Student</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Started</th>
+                <th>Completed</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for exam in exams %}
+            <tr>
+                <td>{{ exam.id }}</td>
+                <td>{{ exam.student_name }}</td>
+                <td>{{ exam.exam_type }}</td>
+                <td><span class="badge badge-{{ exam.status }}">{{ exam.status }}</span></td>
+                <td>{{ exam.started_at[:19] if exam.started_at else 'N/A' }}</td>
+                <td>{{ exam.completed_at[:19] if exam.completed_at else 'N/A' }}</td>
+                <td>
+                    <a href="/exams/{{ exam.id }}/view" class="btn" style="padding: 6px 12px; font-size: 12px;">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No exams yet. <a href="/exams/start">Start your first exam</a></p>
+    {% endif %}
+</div>
+{% endblock %}

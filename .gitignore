@@ -1,0 +1,43 @@
+# Environment variables
+.env
+.ENV
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+exams.db
+
+# Uploads and generated files
+uploads/
+exam_pages/*.html
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+transcripts/
+
+# Keep sample files
+!sample_manuscripts/*.txt

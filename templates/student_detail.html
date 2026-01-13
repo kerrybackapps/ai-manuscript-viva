@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.name }} - AI Exam System{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 24px;">{{ student.name }}</h1>
+
+<div class="card">
+    <h2>Student Information</h2>
+    <table style="margin-top: 16px;">
+        <tr>
+            <td style="font-weight: 600; width: 200px;">Student ID</td>
+            <td>{{ student.student_id }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: 600;">Email</td>
+            <td>{{ student.email or 'N/A' }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: 600;">Project Title</td>
+            <td>{{ student.project_title or 'N/A' }}</td>
+        </tr>
+        {% if student.project_description %}
+        <tr>
+            <td style="font-weight: 600;">Project Description</td>
+            <td>{{ student.project_description }}</td>
+        </tr>
+        {% endif %}
+    </table>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Exam History</h2>
+        <a href="/exams/start?student_id={{ student.student_id }}" class="btn btn-success">Start New Exam</a>
+    </div>
+
+    {% if exams %}
+    <table>
+        <thead>
+            <tr>
+                <th>Exam Type</th>
+                <th>Status</th>
+                <th>Started</th>
+                <th>Completed</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for exam in exams %}
+            <tr>
+                <td>{{ exam.exam_type }}</td>
+                <td><span class="badge badge-{{ exam.status }}">{{ exam.status }}</span></td>
+                <td>{{ exam.started_at[:19] if exam.started_at else 'N/A' }}</td>
+                <td>{{ exam.completed_at[:19] if exam.completed_at else 'N/A' }}</td>
+                <td>
+                    <a href="/exams/{{ exam.id }}/view" class="btn" style="padding: 6px 12px; font-size: 12px;">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="margin-top: 16px; color: #7f8c8d;">No exams yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

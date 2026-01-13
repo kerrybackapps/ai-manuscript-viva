@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test ElevenLabs Exam Agent</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .instructions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .widget-container {
+            margin-top: 30px;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            padding: 20px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test AI Oral Examiner</h1>
+
+    <div class="instructions">
+        <h2>Instructions:</h2>
+        <ol>
+            <li>Click the voice icon below to start talking to the agent</li>
+            <li>The agent will ask you exam questions about machine learning</li>
+            <li>Speak your answers naturally</li>
+            <li>The conversation will be transcribed automatically</li>
+            <li>The agent will ask 5-7 questions then end with "EXAM_COMPLETE"</li>
+        </ol>
+        <p><strong>Note:</strong> Make sure your microphone is enabled in your browser!</p>
+    </div>
+
+    <div class="widget-container">
+        <h3>Voice Exam Widget</h3>
+
+        <!-- ElevenLabs Conversational AI Widget -->
+        <elevenlabs-convai agent-id="agent_7401kevvmc1gf31ahfwy81yramgs"></elevenlabs-convai>
+        <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async></script>
+    </div>
+
+    <div class="instructions" style="margin-top: 30px;">
+        <h3>What to Expect:</h3>
+        <ul>
+            <li>The agent will greet you and ask about your ML project</li>
+            <li>It will ask follow-up questions based on your answers</li>
+            <li>Questions will focus on concepts, decisions, and understanding</li>
+            <li>If you ask it to repeat, it will repeat the question verbatim</li>
+            <li>It will give you time to think before answering</li>
+        </ul>
+    </div>
+</body>
+</html>

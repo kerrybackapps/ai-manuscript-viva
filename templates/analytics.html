@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - AI Exam System{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 24px;">Analytics & Reporting</h1>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Total Students</h3>
+        <div class="value">{{ analytics.total_students }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Total Exams</h3>
+        <div class="value">{{ analytics.total_exams }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Completed Exams</h3>
+        <div class="value">{{ analytics.completed_exams }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Total API Cost</h3>
+        <div class="value">${{ "%.2f"|format(analytics.total_cost) }}</div>
+    </div>
+</div>
+
+{% if analytics.avg_scores_by_model %}
+<div class="card">
+    <h2>Average Scores by Model</h2>
+    <div class="stats-grid" style="margin-top: 16px;">
+        {% for model, avg in analytics.avg_scores_by_model.items() %}
+        <div class="stat-card">
+            <h3>{{ model.upper() }}</h3>
+            <div class="value" style="font-size: 28px;">{{ avg }}/4.0</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2>Cost Per Exam</h2>
+    {% if analytics.completed_exams > 0 %}
+    <div class="stat-card" style="margin-top: 16px;">
+        <h3>Average Cost</h3>
+        <div class="value">${{ "%.2f"|format(analytics.total_cost / analytics.completed_exams) }}</div>
+        <p style="margin-top: 8px; color: #7f8c8d;">Based on {{ analytics.completed_exams }} completed exam{{ 's' if analytics.completed_exams != 1 else '' }}</p>
+    </div>
+    {% else %}
+    <p style="margin-top: 16px; color: #7f8c8d;">No completed exams yet</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Recent Exam Performance</h2>
+    {% if exams %}
+    <table style="margin-top: 16px;">
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for exam in exams %}
+            <tr>
+                <td>{{ exam.student_name }}</td>
+                <td>{{ exam.exam_type }}</td>
+                <td><span class="badge badge-{{ exam.status }}">{{ exam.status }}</span></td>
+                <td>{{ exam.started_at[:10] if exam.started_at else 'N/A' }}</td>
+                <td>
+                    <a href="/exams/{{ exam.id }}/view" class="btn" style="padding: 6px 12px; font-size: 12px;">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="margin-top: 16px; color: #7f8c8d;">No exam data available</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Key Insights</h2>
+    <ul style="margin-left: 20px; margin-top: 16px; line-height: 1.8;">
+        <li>Total spending: ${{ "%.2f"|format(analytics.total_cost) }} for {{ analytics.completed_exams }} exam{{ 's' if analytics.completed_exams != 1 else '' }}</li>
+        <li>Completion rate: {{ "%.1f"|format((analytics.completed_exams / analytics.total_exams * 100) if analytics.total_exams > 0 else 0) }}%</li>
+        <li>Average cost per student: ${{ "%.2f"|format((analytics.total_cost / analytics.total_students) if analytics.total_students > 0 else 0) }}</li>
+    </ul>
+</div>
+{% endblock %}

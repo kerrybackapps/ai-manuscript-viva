@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sample Manuscripts - Viva Demo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+        }
+        .btn-back {
+            display: inline-block;
+            color: #667eea;
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+        .btn-back:hover {
+            text-decoration: underline;
+        }
+        .sample {
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        .sample h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .sample p {
+            color: #718096;
+            margin-bottom: 10px;
+        }
+        .sample .meta {
+            font-size: 14px;
+            color: #a0aec0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="btn-back">← Back to Home</a>
+
+        <div class="card">
+            <h1>Sample Manuscripts</h1>
+            <p class="subtitle">Choose a sample manuscript to try the oral exam demo</p>
+
+            {% if samples %}
+                {% for sample in samples %}
+                <div class="sample">
+                    <h3>{{ sample.filename }}</h3>
+                    <p class="meta">Size: {{ "%.1f"|format(sample.size / 1024) }} KB</p>
+                    <p><em>To use this sample, manually upload it from the samples folder</em></p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No sample manuscripts found. Place sample files in the sample_manuscripts/ folder.</p>
+            {% endif %}
+
+            <p style="margin-top: 30px; padding: 15px; background: #edf2f7; border-radius: 8px;">
+                <strong>Note:</strong> For this demo, you'll need to manually upload one of the sample manuscripts using the <a href="/upload" style="color: #667eea;">upload page</a>.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

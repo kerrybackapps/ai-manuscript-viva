@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Scenarios - AI Exam System{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h1>Case Study Scenarios</h1>
+    <a href="/scenarios/add" class="btn btn-success">Add Scenario</a>
+</div>
+
+<div class="card">
+    <p style="margin-bottom: 16px;">These scenarios are randomly assigned to students during case study exams.</p>
+
+    {% if scenarios %}
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Difficulty</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for scenario in scenarios %}
+            <tr>
+                <td style="font-weight: 600;">{{ scenario.title }}</td>
+                <td><span class="badge badge-completed">{{ scenario.category }}</span></td>
+                <td>{{ scenario.difficulty }}</td>
+                <td>{{ scenario.description[:100] }}{% if scenario.description|length > 100 %}...{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No scenarios yet. <a href="/scenarios/add">Add your first scenario</a></p>
+    {% endif %}
+</div>
+{% endblock %}

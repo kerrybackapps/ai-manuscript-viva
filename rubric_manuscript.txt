@@ -1,0 +1,64 @@
+MANUSCRIPT EVALUATION RUBRIC
+
+Grade the written manuscript on a 4-point scale for each category:
+
+1. CLARITY (0-4 points)
+   4 = Exceptionally clear; ideas expressed precisely; no ambiguity
+   3 = Generally clear; minor unclear passages
+   2 = Somewhat unclear; reader must work to understand
+   1 = Frequently unclear; confusing presentation
+   0 = Incomprehensible
+
+   Evaluate:
+   - Are sentences well-constructed?
+   - Is terminology used correctly?
+   - Are concepts explained clearly?
+   - Is the writing free of jargon or properly defined?
+
+2. COHERENCE (0-4 points)
+   4 = Highly coherent; logical flow throughout; strong transitions
+   3 = Generally coherent; mostly logical structure
+   2 = Somewhat disjointed; some logical gaps
+   1 = Poorly organized; difficult to follow
+   0 = Incoherent structure
+
+   Evaluate:
+   - Does the argument flow logically?
+   - Are sections well-connected?
+   - Do transitions guide the reader?
+   - Is there a clear through-line?
+
+3. COMPREHENSIVENESS (0-4 points)
+   4 = Thoroughly addresses all aspects; excellent depth
+   3 = Addresses most aspects adequately
+   2 = Missing some important elements
+   1 = Superficial treatment; major gaps
+   0 = Severely incomplete
+
+   Evaluate:
+   - Does it address the assignment requirements?
+   - Is the scope appropriate?
+   - Are claims supported with evidence?
+   - Are counterarguments considered?
+
+OVERALL MANUSCRIPT SCORE: Average of three categories (0-4.0)
+
+Format your response as JSON:
+{
+    "scores": {
+        "clarity": {
+            "score": X,
+            "justification": "Explain the clarity score..."
+        },
+        "coherence": {
+            "score": X,
+            "justification": "Explain the coherence score..."
+        },
+        "comprehensiveness": {
+            "score": X,
+            "justification": "Explain the comprehensiveness score..."
+        }
+    },
+    "overall_score": X.X,
+    "overall_assessment": "Brief summary of the manuscript's strengths and weaknesses"
+}

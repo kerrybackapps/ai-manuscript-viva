@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manuscript Viva Demo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            padding: 40px 20px;
+        }
+        .header h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .card h2 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        .card p {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .card ul {
+            color: #4a5568;
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 10px 10px 10px 0;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: #48bb78;
+        }
+        .feature {
+            display: inline-block;
+            background: #edf2f7;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin: 5px;
+            font-size: 14px;
+            color: #2d3748;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .feature-box {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .feature-box h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .feature-box p {
+            color: #718096;
+            font-size: 14px;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Manuscript Viva Demo</h1>
+            <p>AI-Powered Oral Examination System</p>
+        </div>
+
+        <div class="card">
+            <h2>Welcome to the Demo</h2>
+            <p>This system allows students to submit written manuscripts and undergo personalized oral examinations conducted by AI. The AI examiner reads your manuscript and asks targeted questions to assess your understanding.</p>
+
+            <div class="features-grid">
+                <div class="feature-box">
+                    <h3>📄 Upload Manuscript</h3>
+                    <p>Submit your paper in PDF, DOCX, or TXT format</p>
+                </div>
+                <div class="feature-box">
+                    <h3>🤖 AI Analysis</h3>
+                    <p>Claude analyzes your work and identifies key areas to probe</p>
+                </div>
+                <div class="feature-box">
+                    <h3>🎤 Voice Exam</h3>
+                    <p>Answer 10-12 questions about your manuscript via voice</p>
+                </div>
+                <div class="feature-box">
+                    <h3>📊 Dual Grading</h3>
+                    <p>Separate scores for manuscript quality and oral defense</p>
+                </div>
+            </div>
+
+            <h2 style="margin-top: 30px;">How It Works</h2>
+            <ul>
+                <li><strong>Step 1:</strong> Upload your manuscript (or use a sample)</li>
+                <li><strong>Step 2:</strong> AI reads and analyzes your work</li>
+                <li><strong>Step 3:</strong> Custom examiner agent is created</li>
+                <li><strong>Step 4:</strong> Take the oral exam (voice-based)</li>
+                <li><strong>Step 5:</strong> Receive grades from 3-model grading council</li>
+            </ul>
+
+            <div style="margin-top: 30px;">
+                <a href="/upload" class="btn">📤 Upload Your Manuscript</a>
+                <a href="/samples" class="btn btn-secondary">📚 Use Sample Manuscript</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Grading System</h2>
+            <p><strong>Part A - Manuscript Quality (4-point scale):</strong></p>
+            <ul>
+                <li>Clarity: Precision of language and explanations</li>
+                <li>Coherence: Logical structure and flow</li>
+                <li>Comprehensiveness: Depth of coverage and evidence</li>
+            </ul>
+            <p style="margin-top: 15px;"><strong>Part B - Oral Examination (4-point scale):</strong></p>
+            <ul>
+                <li>Understanding: Can explain and defend your work</li>
+                <li>Reasoning: Clear justification for choices</li>
+                <li>Alternatives: Awareness of other approaches and trade-offs</li>
+            </ul>
+            <p style="margin-top: 15px; font-size: 14px; color: #718096;">
+                Each part is graded independently by Claude Sonnet 4.5, OpenAI o1, and Gemini 2.0 Flash.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

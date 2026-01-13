@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Add Student - AI Exam System{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 24px;">Add New Student</h1>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<div class="card">
+    <form method="POST">
+        <div class="form-group">
+            <label for="student_id">Student ID *</label>
+            <input type="text" id="student_id" name="student_id" required>
+        </div>
+
+        <div class="form-group">
+            <label for="name">Full Name *</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email">
+        </div>
+
+        <div class="form-group">
+            <label for="project_title">Project Title</label>
+            <input type="text" id="project_title" name="project_title">
+        </div>
+
+        <div class="form-group">
+            <label for="project_description">Project Description</label>
+            <textarea id="project_description" name="project_description"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+            <button type="submit" class="btn btn-success">Add Student</button>
+            <a href="/students" class="btn">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

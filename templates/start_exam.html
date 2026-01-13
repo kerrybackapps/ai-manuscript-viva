@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Start Exam - AI Exam System{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 24px;">Start New Exam</h1>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<div class="card">
+    <form method="POST">
+        <div class="form-group">
+            <label for="student_id">Select Student *</label>
+            <select id="student_id" name="student_id" required>
+                <option value="">-- Select a student --</option>
+                {% for student in students %}
+                <option value="{{ student.student_id }}">{{ student.student_id }} - {{ student.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="exam_type">Exam Type *</label>
+            <select id="exam_type" name="exam_type" required>
+                <option value="project">Project Discussion</option>
+                <option value="case_study">Case Study</option>
+                <option value="combined">Combined (Project + Case Study)</option>
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn btn-success">Start Exam</button>
+            <a href="/exams" class="btn">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Instructions</h2>
+    <ol style="margin-left: 20px; margin-top: 12px; line-height: 1.8;">
+        <li>Select the student taking the exam</li>
+        <li>Choose the exam type:
+            <ul style="margin-left: 20px; margin-top: 8px;">
+                <li><strong>Project Discussion:</strong> Questions about their capstone project</li>
+                <li><strong>Case Study:</strong> Random scenario-based questions</li>
+                <li><strong>Combined:</strong> Both project and case study questions</li>
+            </ul>
+        </li>
+        <li>Click "Start Exam" to begin</li>
+        <li>The exam will be conducted via text interface</li>
+        <li>After completion, the grading council will evaluate the transcript</li>
+    </ol>
+</div>
+{% endblock %}

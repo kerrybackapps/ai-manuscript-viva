@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Add Scenario - AI Exam System{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 24px;">Add New Scenario</h1>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<div class="card">
+    <form method="POST">
+        <div class="form-group">
+            <label for="title">Title *</label>
+            <input type="text" id="title" name="title" required placeholder="e.g., Customer Churn Prediction">
+        </div>
+
+        <div class="form-group">
+            <label for="category">Category *</label>
+            <select id="category" name="category" required>
+                <option value="Machine Learning">Machine Learning</option>
+                <option value="AI Ethics">AI Ethics</option>
+                <option value="Statistics">Statistics</option>
+                <option value="MLOps">MLOps</option>
+                <option value="Data Science">Data Science</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="difficulty">Difficulty *</label>
+            <select id="difficulty" name="difficulty" required>
+                <option value="easy">Easy</option>
+                <option value="medium" selected>Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Scenario Description *</label>
+            <textarea id="description" name="description" required placeholder="Describe the case study scenario that will be presented to students..." style="min-height: 200px;"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+            <button type="submit" class="btn btn-success">Add Scenario</button>
+            <a href="/scenarios" class="btn">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

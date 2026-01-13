@@ -1,0 +1,23 @@
+EXAM CONTEXT - Machine Learning Project
+
+TOPIC: Supervised Learning and Model Evaluation
+
+The student has completed a course project on building a classification model to predict customer churn. They explored various algorithms including logistic regression, decision trees, and random forests.
+
+Key topics covered in the course:
+- Supervised vs unsupervised learning
+- Classification vs regression
+- Train/test splits and cross-validation
+- Overfitting and underfitting
+- Model evaluation metrics (accuracy, precision, recall, F1, AUC-ROC)
+- Feature engineering and selection
+- Ensemble methods
+- Bias-variance tradeoff
+
+EXAM FOCUS:
+Test the student's understanding of:
+1. Why they chose specific models for their project
+2. How they evaluated model performance
+3. What trade-offs they considered
+4. What could go wrong with their approach
+5. How they would explain their model to non-technical stakeholders

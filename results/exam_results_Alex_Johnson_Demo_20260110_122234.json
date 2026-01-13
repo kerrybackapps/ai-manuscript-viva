@@ -1,0 +1,102 @@
+{
+  "student": "Alex_Johnson_Demo",
+  "timestamp": "20260110_122234",
+  "transcript": "EXAM TRANSCRIPT\nStudent: Alex Johnson\n============================================================\n\nEXAMINER: Let's begin with your project. You built a customer churn prediction model. Can you explain why you chose to use a random forest classifier for this problem?\n\nALEX JOHNSON: I chose random forest because it handles both numerical and categorical features well, and it's less prone to overfitting compared to a single decision tree. It also gives feature importance scores which helped me understand which factors most influenced churn.\n\nEXAMINER: Good. Now, you mentioned overfitting. How did you actually verify that your model wasn't overfitting to the training data?\n\nALEX JOHNSON: I used cross-validation with 5 folds and compared the training accuracy to validation accuracy. The training accuracy was about 87% and validation was 82%, so there was some overfitting but not too severe. I also used a holdout test set that I didn't touch during development.\n\nEXAMINER: What evaluation metrics did you use beyond accuracy, and why did you choose those specific metrics?\n\nALEX JOHNSON: I focused on recall and precision because in customer churn, false negatives are costly - missing a customer who will churn means we lose them. I used F1 score to balance precision and recall, and also looked at the AUC-ROC curve to evaluate performance across different thresholds.\n\nEXAMINER: Interesting. Can you explain a scenario where your model might fail or produce misleading predictions?\n\nALEX JOHNSON: Umm, if the patterns in customer behavior change suddenly, like during a pandemic or major company policy change, the model would still be predicting based on historical patterns. Also, if there's class imbalance and we have very few examples of churned customers, the model might just predict everyone stays.\n\nEXAMINER: How would you explain your model's predictions to a non-technical business stakeholder who wants to know why a specific customer is predicted to churn?\n\nALEX JOHNSON: I would use the feature importance from the random forest to show which factors contributed most. For example, I might say \"This customer is predicted to churn because they haven't used our service in 30 days, they had 3 support tickets in the last month, and their usage is declining compared to similar customers.\" I'd avoid technical jargon and focus on actionable insights.\n\nEXAMINER: Thank you. The exam is now complete.\n",
+  "grading_results": {
+    "round_1": {
+      "claude": {
+        "error": "Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-5-sonnet-20240620'}, 'request_id': 'req_011CWzAQAPMQFaCm7BG3e8Cs'}",
+        "model": "Claude"
+      },
+      "gpt": {
+        "scores": {
+          "Conceptual Understanding": {
+            "score": 4,
+            "justification": "Alex demonstrated a deep understanding of core ML concepts, including the choice of random forest for handling numerical and categorical features, and understanding overfitting. They also correctly distinguished between related concepts like precision, recall, and F1 score."
+          },
+          "Practical Application": {
+            "score": 3,
+            "justification": "Alex showed solid understanding in applying ML techniques to real-world scenarios, such as using cross-validation and a holdout set to check for overfitting. However, they could have elaborated more on handling class imbalance in practice."
+          },
+          "Critical Thinking": {
+            "score": 3,
+            "justification": "Alex recognized potential failure modes, such as changes in customer behavior and class imbalance. They could have explored more trade-offs and alternatives in handling these issues, but their recognition of these limitations was solid."
+          },
+          "Communication": {
+            "score": 4,
+            "justification": "Alex communicated technical concepts clearly and used appropriate terminology. Their explanation of model predictions to non-technical stakeholders was clear and focused on actionable insights, avoiding technical jargon effectively."
+          }
+        },
+        "overall_score": 3.5,
+        "overall_assessment": "Alex demonstrated a strong understanding of machine learning fundamentals, with excellent conceptual knowledge and communication skills. They applied concepts well to practical scenarios and showed good critical thinking, though there is room for deeper exploration of trade-offs and alternatives."
+      }
+    },
+    "round_2": {
+      "claude": {
+        "error": "Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-5-sonnet-20240620'}, 'request_id': 'req_011CWzAQbVTMW5GNhLY1eXri'}",
+        "model": "Claude"
+      },
+      "gpt": {
+        "scores": {
+          "Conceptual Understanding": {
+            "score": 3,
+            "justification": "Alex demonstrated a solid understanding of core ML concepts, such as the choice of a random forest classifier and its advantages over a single decision tree. However, there was no deep dive into the underlying mathematics or theory, which is necessary for an 'Excellent' rating.",
+            "deliberation_notes": "Without other graders' scores to compare, I relied solely on the transcript. Alex's explanation was clear but lacked depth in mathematical theory."
+          },
+          "Practical Application": {
+            "score": 4,
+            "justification": "Alex effectively applied ML concepts to a real-world scenario, using cross-validation and a holdout test set to verify model performance. The choice of evaluation metrics was appropriate for the problem context.",
+            "deliberation_notes": "The practical application was strong, with a clear understanding of model evaluation and the reasoning behind metric selection."
+          },
+          "Critical Thinking": {
+            "score": 3,
+            "justification": "Alex identified potential failure modes and limitations, such as changes in customer behavior patterns and class imbalance. However, there was limited discussion on potential biases or alternative approaches.",
+            "deliberation_notes": "Alex's recognition of limitations was good, but the response could have been more comprehensive in discussing biases and alternatives."
+          },
+          "Communication": {
+            "score": 4,
+            "justification": "Alex communicated technical concepts clearly and effectively, especially in explaining model predictions to non-technical stakeholders. The use of concrete examples was a strong point.",
+            "deliberation_notes": "The communication was clear and well-structured, making complex ideas accessible to a non-technical audience."
+          }
+        },
+        "overall_score": 3.5,
+        "overall_assessment": "Alex demonstrated a solid understanding of machine learning fundamentals, with strong practical application and communication skills. While there is room for improvement in conceptual depth and critical thinking, the performance was commendable."
+      }
+    },
+    "convergence_metrics": {
+      "error": "Need at least 2 scores for convergence"
+    },
+    "final_grades": {
+      "claude": {
+        "error": "Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-5-sonnet-20240620'}, 'request_id': 'req_011CWzAQbVTMW5GNhLY1eXri'}",
+        "model": "Claude"
+      },
+      "gpt": {
+        "scores": {
+          "Conceptual Understanding": {
+            "score": 3,
+            "justification": "Alex demonstrated a solid understanding of core ML concepts, such as the choice of a random forest classifier and its advantages over a single decision tree. However, there was no deep dive into the underlying mathematics or theory, which is necessary for an 'Excellent' rating.",
+            "deliberation_notes": "Without other graders' scores to compare, I relied solely on the transcript. Alex's explanation was clear but lacked depth in mathematical theory."
+          },
+          "Practical Application": {
+            "score": 4,
+            "justification": "Alex effectively applied ML concepts to a real-world scenario, using cross-validation and a holdout test set to verify model performance. The choice of evaluation metrics was appropriate for the problem context.",
+            "deliberation_notes": "The practical application was strong, with a clear understanding of model evaluation and the reasoning behind metric selection."
+          },
+          "Critical Thinking": {
+            "score": 3,
+            "justification": "Alex identified potential failure modes and limitations, such as changes in customer behavior patterns and class imbalance. However, there was limited discussion on potential biases or alternative approaches.",
+            "deliberation_notes": "Alex's recognition of limitations was good, but the response could have been more comprehensive in discussing biases and alternatives."
+          },
+          "Communication": {
+            "score": 4,
+            "justification": "Alex communicated technical concepts clearly and effectively, especially in explaining model predictions to non-technical stakeholders. The use of concrete examples was a strong point.",
+            "deliberation_notes": "The communication was clear and well-structured, making complex ideas accessible to a non-technical audience."
+          }
+        },
+        "overall_score": 3.5,
+        "overall_assessment": "Alex demonstrated a solid understanding of machine learning fundamentals, with strong practical application and communication skills. While there is room for improvement in conceptual depth and critical thinking, the performance was commendable."
+      }
+    }
+  }
+}

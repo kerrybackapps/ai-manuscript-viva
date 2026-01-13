@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AI Exam System{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 24px;">Dashboard</h1>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Total Students</h3>
+        <div class="value">{{ analytics.total_students }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Total Exams</h3>
+        <div class="value">{{ analytics.total_exams }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Completed Exams</h3>
+        <div class="value">{{ analytics.completed_exams }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Total Cost</h3>
+        <div class="value">${{ "%.2f"|format(analytics.total_cost) }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Quick Actions</h2>
+    <div style="display: flex; gap: 16px; margin-top: 16px;">
+        <a href="/exams/start" class="btn btn-success">Start New Exam</a>
+        <a href="/students/add" class="btn">Add Student</a>
+        <a href="/scenarios/add" class="btn">Add Scenario</a>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Recent Exams</h2>
+    {% if recent_exams %}
+    <table>
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Started</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for exam in recent_exams %}
+            <tr>
+                <td>{{ exam.student_name }}</td>
+                <td>{{ exam.exam_type }}</td>
+                <td><span class="badge badge-{{ exam.status }}">{{ exam.status }}</span></td>
+                <td>{{ exam.started_at[:19] if exam.started_at else 'N/A' }}</td>
+                <td>
+                    <a href="/exams/{{ exam.id }}/view" class="btn" style="padding: 6px 12px; font-size: 12px;">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="margin-top: 16px; color: #7f8c8d;">No exams yet. <a href="/exams/start">Start your first exam</a></p>
+    {% endif %}
+</div>
+{% endblock %}

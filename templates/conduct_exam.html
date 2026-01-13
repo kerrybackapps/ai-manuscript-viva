@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Conduct Exam - {{ student.name }} - AI Exam System{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 24px;">Conducting Exam: {{ student.name }}</h1>
+
+<div class="card">
+    <h2>Exam Session #{{ exam.id }}</h2>
+    <p><strong>Student:</strong> {{ student.name }} ({{ student.student_id }})</p>
+    <p><strong>Type:</strong> {{ exam.exam_type }}</p>
+    <p><strong>Status:</strong> <span class="badge badge-{{ exam.status }}">{{ exam.status }}</span></p>
+</div>
+
+<div class="card">
+    <h2>Instructions</h2>
+    <p>This is a text-based exam interface. For the full system:</p>
+    <ol style="margin-left: 20px; margin-top: 12px; line-height: 1.8;">
+        <li>In a production system, this would integrate with ElevenLabs Conversational AI for voice</li>
+        <li>For this demo, use the CLI demo tool (<code>python demo.py</code>) for interactive exams</li>
+        <li>Or manually enter a transcript below</li>
+    </ol>
+</div>
+
+<div class="card">
+    <h2>Upload Transcript</h2>
+    <form id="transcript-form">
+        <div class="form-group">
+            <label for="transcript">Exam Transcript</label>
+            <textarea id="transcript" name="transcript" style="min-height: 300px; font-family: monospace;" placeholder="Paste the exam transcript here...">{{ exam.transcript or '' }}</textarea>
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+            <button type="submit" class="btn btn-success">Save & Grade Transcript</button>
+            <a href="/exams/{{ exam.id }}/view" class="btn">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<div id="status-message" style="display: none; margin-top: 16px;"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('transcript-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const transcript = document.getElementById('transcript').value;
+    const statusDiv = document.getElementById('status-message');
+
+    if (!transcript.trim()) {
+        statusDiv.className = 'alert alert-error';
+        statusDiv.textContent = 'Please enter a transcript';
+        statusDiv.style.display = 'block';
+        return;
+    }
+
+    // Save transcript
+    statusDiv.className = 'alert alert-success';
+    statusDiv.textContent = 'Saving transcript...';
+    statusDiv.style.display = 'block';
+
+    try {
+        const saveResponse = await fetch('/api/exams/{{ exam.id }}/transcript', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transcript })
+        });
+
+        if (!saveResponse.ok) {
+            throw new Error('Failed to save transcript');
+        }
+
+        // Start grading
+        statusDiv.textContent = 'Transcript saved. Starting grading council...';
+
+        const gradeResponse = await fetch('/api/exams/{{ exam.id }}/grade', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ deliberation_rounds: 1 })
+        });
+
+        if (!gradeResponse.ok) {
+            throw new Error('Grading failed');
+        }
+
+        const result = await gradeResponse.json();
+
+        statusDiv.textContent = 'Grading complete! Redirecting...';
+
+        setTimeout(() => {
+            window.location.href = '/exams/{{ exam.id }}/view';
+        }, 1500);
+
+    } catch (error) {
+        statusDiv.className = 'alert alert-error';
+        statusDiv.textContent = 'Error: ' + error.message;
+    }
+});
+</script>
+{% endblock %}

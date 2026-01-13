@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Manuscript - Viva Demo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .file-upload {
+            border: 3px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background: #f7fafc;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .file-upload:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+        .file-upload.dragover {
+            border-color: #667eea;
+            background: #e6fffa;
+        }
+        .file-upload input[type="file"] {
+            display: none;
+        }
+        .file-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .file-name {
+            color: #48bb78;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-back {
+            display: inline-block;
+            color: #667eea;
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+        .btn-back:hover {
+            text-decoration: underline;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        .status.processing {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="btn-back">← Back to Home</a>
+
+        <div class="card">
+            <h1>Upload Manuscript</h1>
+            <p class="subtitle">Submit your paper for AI oral examination</p>
+
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="student_name">Your Name</label>
+                    <input type="text" id="student_name" name="student_name" required placeholder="Enter your full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="assignment">Assignment Description</label>
+                    <textarea id="assignment" name="assignment" required placeholder="Briefly describe the assignment (e.g., 'Write a research paper on AI applications in healthcare')"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Manuscript File (PDF, DOCX, or TXT)</label>
+                    <div class="file-upload" id="fileUpload">
+                        <div class="file-icon">📄</div>
+                        <p><strong>Click to browse</strong> or drag and drop your file here</p>
+                        <p style="font-size: 14px; color: #718096; margin-top: 5px;">Maximum file size: 16MB</p>
+                        <input type="file" id="manuscript" name="manuscript" accept=".txt,.pdf,.docx" required>
+                        <div class="file-name" id="fileName"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" id="submitBtn">
+                    Create Oral Exam Session
+                </button>
+
+                <div class="status" id="status"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('manuscript');
+        const fileUpload = document.getElementById('fileUpload');
+        const fileName = document.getElementById('fileName');
+        const submitBtn = document.getElementById('submitBtn');
+        const status = document.getElementById('status');
+
+        // Click to upload
+        fileUpload.addEventListener('click', () => fileInput.click());
+
+        // Drag and drop
+        fileUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUpload.classList.add('dragover');
+        });
+
+        fileUpload.addEventListener('dragleave', () => {
+            fileUpload.classList.remove('dragover');
+        });
+
+        fileUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUpload.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                updateFileName();
+            }
+        });
+
+        // File selection
+        fileInput.addEventListener('change', updateFileName);
+
+        function updateFileName() {
+            if (fileInput.files.length > 0) {
+                fileName.textContent = `Selected: ${fileInput.files[0].name}`;
+            }
+        }
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+
+            // Show processing
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Processing manuscript...';
+            status.className = 'status processing';
+            status.style.display = 'block';
+            status.textContent = 'Uploading and analyzing manuscript... This may take 30-60 seconds.';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    status.className = 'status success';
+                    status.textContent = `✓ Exam session created successfully! Redirecting to exam...`;
+                    setTimeout(() => {
+                        window.location.href = data.exam_url;
+                    }, 1500);
+                } else {
+                    throw new Error(data.error || 'Upload failed');
+                }
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = `Error: ${error.message}`;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Oral Exam Session';
+            }
+        });
+    </script>
+</body>
+</html>

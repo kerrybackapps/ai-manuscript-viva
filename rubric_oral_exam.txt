@@ -1,0 +1,64 @@
+ORAL EXAMINATION EVALUATION RUBRIC
+
+Grade the oral defense on a 4-point scale for each category:
+
+1. UNDERSTANDING OF OWN WORK (0-4 points)
+   4 = Deep understanding; can explain all aspects confidently
+   3 = Good understanding; minor gaps
+   2 = Partial understanding; struggles with some aspects
+   1 = Limited understanding; often confused
+   0 = Does not understand their own work
+
+   Evaluate:
+   - Can they explain their arguments without reading?
+   - Do they understand the implications of their claims?
+   - Can they connect different parts of their work?
+   - Do they recognize the significance of their findings?
+
+2. REASONING & JUSTIFICATION (0-4 points)
+   4 = Excellent reasoning; clear justification for all choices
+   3 = Good reasoning; justifies most decisions
+   2 = Weak reasoning; struggles to explain choices
+   1 = Poor reasoning; cannot justify decisions
+   0 = No coherent reasoning
+
+   Evaluate:
+   - Can they explain WHY they made certain choices?
+   - Do their explanations make logical sense?
+   - Can they defend their positions under questioning?
+   - Do they provide evidence for their reasoning?
+
+3. CONSIDERATION OF ALTERNATIVES (0-4 points)
+   4 = Thoroughly considered alternatives; aware of trade-offs
+   3 = Considered some alternatives; understands main trade-offs
+   2 = Limited consideration; vague about alternatives
+   1 = Did not consider alternatives
+   0 = Unaware alternatives exist
+
+   Evaluate:
+   - Can they describe what else they considered?
+   - Do they understand why they rejected alternatives?
+   - Are they aware of the strengths/weaknesses of their approach?
+   - Can they discuss trade-offs intelligently?
+
+OVERALL ORAL EXAM SCORE: Average of three categories (0-4.0)
+
+Format your response as JSON:
+{
+    "scores": {
+        "understanding": {
+            "score": X,
+            "justification": "Explain the understanding score..."
+        },
+        "reasoning": {
+            "score": X,
+            "justification": "Explain the reasoning score..."
+        },
+        "alternatives": {
+            "score": X,
+            "justification": "Explain the alternatives score..."
+        }
+    },
+    "overall_score": X.X,
+    "overall_assessment": "Brief summary of the student's oral performance"
+}

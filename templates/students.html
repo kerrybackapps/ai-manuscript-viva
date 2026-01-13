@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Students - AI Exam System{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h1>Students</h1>
+    <a href="/students/add" class="btn btn-success">Add Student</a>
+</div>
+
+<div class="card">
+    {% if students %}
+    <table>
+        <thead>
+            <tr>
+                <th>Student ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Project</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr>
+                <td>{{ student.student_id }}</td>
+                <td>{{ student.name }}</td>
+                <td>{{ student.email or 'N/A' }}</td>
+                <td>{{ student.project_title or 'N/A' }}</td>
+                <td>
+                    <a href="/students/{{ student.student_id }}" class="btn" style="padding: 6px 12px; font-size: 12px;">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No students yet. <a href="/students/add">Add your first student</a></p>
+    {% endif %}
+</div>
+{% endblock %}
