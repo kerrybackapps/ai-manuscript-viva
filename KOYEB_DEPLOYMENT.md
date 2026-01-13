@@ -56,9 +56,8 @@ After first deployment, initialize prompts by visiting:
 
 ## Access Your App
 
-- **Public interface**: `https://your-app.koyeb.app/`
-- **Upload manuscripts**: `https://your-app.koyeb.app/upload`
-- **Admin panel**: `https://your-app.koyeb.app/admin/login`
+- **Upload manuscripts**: `https://your-app.koyeb.app/` (main page)
+- **Admin panel**: `https://your-app.koyeb.app/admin`
 - **Admin password**: `password`
 
 ## Auto-Deploy
