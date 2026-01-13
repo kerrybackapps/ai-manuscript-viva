@@ -221,7 +221,7 @@ def samples():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))
     print("="*70)
-    print(" MANUSCRIPT VIVA DEMO")
+    print(" MANUSCRIPT VIVA VOCE DEMO")
     print("="*70)
     print(f"\n Starting demo server on port {port}...")
     print(f" Open in browser: http://localhost:{port}")
