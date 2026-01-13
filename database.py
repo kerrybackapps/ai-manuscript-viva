@@ -43,6 +43,7 @@ class ExamSession(Base):
     exam_type = Column(String(50))  # 'project', 'case_study', etc.
     status = Column(String(20), default='pending')  # pending, in_progress, completed, failed
     transcript = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
     started_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime)
 
@@ -54,6 +55,7 @@ class ExamSession(Base):
             'exam_type': self.exam_type,
             'status': self.status,
             'transcript': self.transcript,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
             'started_at': self.started_at.isoformat() if self.started_at else None,
             'completed_at': self.completed_at.isoformat() if self.completed_at else None
         }

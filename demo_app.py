@@ -24,6 +24,22 @@ os.makedirs('uploads', exist_ok=True)
 db = Database()
 system = ManuscriptVivaSystem()
 
+# Initialize database with prompts and settings on first run
+def init_database():
+    """Initialize database with prompts and settings if they don't exist"""
+    try:
+        from initialize_prompts import initialize_prompts, initialize_settings
+        initialize_prompts()
+        initialize_settings()
+    except Exception as e:
+        print(f"Database initialization: {e}")
+
+# Run initialization
+try:
+    init_database()
+except:
+    pass  # Database already initialized
+
 # Register admin blueprint
 from admin_routes import admin_bp
 app.register_blueprint(admin_bp)
