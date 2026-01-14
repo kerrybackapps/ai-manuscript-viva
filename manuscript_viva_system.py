@@ -204,16 +204,30 @@ ENDING THE EXAM (MANDATORY):
 Be professional and focused. Ask exactly these 5 questions in order, no more, no less. You must speak first when the call starts!"""
 
         try:
+            # Get webhook URL from environment
+            webhook_url = os.getenv('WEBHOOK_URL')
+
+            # Build conversation config
+            conversation_config = {
+                "agent": {
+                    "prompt": {
+                        "prompt": agent_prompt
+                    },
+                    "first_message": f"Hello! I've read your manuscript carefully and I'm ready to begin your oral examination. Let's start with the first question. {exam_questions[0]['question'] if exam_questions else 'Can you explain your main argument?'}"
+                }
+            }
+
+            # Add webhook if configured
+            if webhook_url:
+                conversation_config["webhook"] = {
+                    "url": webhook_url,
+                    "events": ["conversation.ended"]
+                }
+                print(f"      Webhook configured: {webhook_url}")
+
             response = self.elevenlabs.conversational_ai.agents.create(
                 name=f"Manuscript Viva Examiner",
-                conversation_config={
-                    "agent": {
-                        "prompt": {
-                            "prompt": agent_prompt
-                        },
-                        "first_message": f"Hello! I've read your manuscript carefully and I'm ready to begin your oral examination. Let's start with the first question. {exam_questions[0]['question'] if exam_questions else 'Can you explain your main argument?'}"
-                    }
-                }
+                conversation_config=conversation_config
             )
 
             return response.agent_id
@@ -258,7 +272,7 @@ Be professional and focused. Ask exactly these 5 questions in order, no more, no
         print(f"\n[3/5] Analyzing manuscript with Claude...")
         analysis = self.analyzer.analyze_manuscript(manuscript_text, assignment_prompt)
         print(f"      Found {len(analysis.get('key_claims', []))} key claims")
-        print(f"      Identified {len(analysis.get('question_areas', []))} question areas")
+        print(f"      Generated {len(analysis.get('exam_questions', []))} exam questions")
 
         # 4. Create exam session
         print(f"\n[4/5] Creating exam session in database...")
