@@ -295,7 +295,14 @@ Key Claims: {', '.join(analysis.get('key_claims', []))}
 
 [ORAL EXAMINATION TRANSCRIPT TO FOLLOW]
 """
-        self.db.update_exam_session(exam_session['id'], transcript=session_data)
+        # Update exam session with all data
+        self.db.update_exam_session(
+            exam_session['id'],
+            transcript=session_data,  # Legacy combined format
+            manuscript_content=manuscript_text,  # Separate manuscript text
+            manuscript_file_path=manuscript_path,  # Path to uploaded file
+            oral_transcript=None  # Will be filled after oral exam
+        )
         print(f"      Session created: ID {exam_session['id']}")
 
         # 5. Create examiner agent
@@ -336,16 +343,9 @@ Key Claims: {', '.join(analysis.get('key_claims', []))}
             print("ERROR: Exam session not found")
             return None
 
-        transcript = exam['transcript']
-
-        # Split manuscript and oral portions
-        if '[ORAL EXAMINATION TRANSCRIPT TO FOLLOW]' in transcript:
-            parts = transcript.split('[ORAL EXAMINATION TRANSCRIPT TO FOLLOW]')
-            manuscript_text = parts[0]
-            oral_text = parts[1] if len(parts) > 1 else ""
-        else:
-            manuscript_text = transcript
-            oral_text = ""
+        # Get manuscript and oral transcript from dedicated fields
+        manuscript_text = exam.get('manuscript_content') or ""
+        oral_text = exam.get('oral_transcript') or ""
 
         # Load rubrics
         with open('rubric_manuscript.txt', 'r') as f:

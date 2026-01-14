@@ -11,6 +11,17 @@ from admin_config import ADMIN_PASSWORD, PROMPTS_DIR
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 db = Database()
 
+# Model name mapping for display
+MODEL_DISPLAY_NAMES = {
+    'claude': 'Claude Opus 4.5',
+    'gpt': 'OpenAI GPT-5.2',
+    'gemini': 'Gemini 3.0'
+}
+
+def get_model_display_name(model_key):
+    """Convert model key to full display name"""
+    return MODEL_DISPLAY_NAMES.get(model_key, model_key.upper())
+
 def admin_required(f):
     """Decorator to require admin authentication"""
     @wraps(f)
@@ -112,8 +123,10 @@ def api_exam_detail(session_id):
         oral_results = []
 
         for r in results:
+            model_key = r.model_name.replace('_manuscript', '').replace('_oral', '')
             result_data = {
-                'model': r.model_name.replace('_manuscript', '').replace('_oral', ''),
+                'model': model_key,
+                'model_display_name': get_model_display_name(model_key),
                 'score': r.overall_score,
                 'categories': r.category_scores,
                 'assessment': r.assessment,
@@ -132,7 +145,10 @@ def api_exam_detail(session_id):
             'student_id': exam.student_id,
             'exam_type': exam.exam_type,
             'created_at': exam.created_at.isoformat(),
-            'transcript': exam.transcript,
+            'transcript': exam.transcript,  # Legacy combined transcript
+            'manuscript_content': exam.manuscript_content,
+            'manuscript_file_path': exam.manuscript_file_path,
+            'oral_transcript': exam.oral_transcript,
             'manuscript_results': manuscript_results,
             'oral_results': oral_results,
             'manuscript_avg': sum(r['score'] for r in manuscript_results) / len(manuscript_results) if manuscript_results else None,

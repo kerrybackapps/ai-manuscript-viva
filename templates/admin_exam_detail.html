@@ -216,6 +216,17 @@
 
             <div class="card">
                 <div class="card-header">
+                    <h2>📑 Submitted Manuscript</h2>
+                </div>
+                <div class="card-body">
+                    <div id="manuscript-section">
+                        <p style="color: #718096;">Loading manuscript...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
                     <h2>📄 Part A: Manuscript Quality</h2>
                 </div>
                 <div class="card-body">
@@ -242,10 +253,10 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h2>📝 Full Transcript</h2>
+                    <h2>📝 Oral Exam Transcript</h2>
                 </div>
                 <div class="card-body">
-                    <div class="transcript" id="transcript"></div>
+                    <div class="transcript" id="oral-transcript"></div>
                 </div>
             </div>
         </div>
@@ -295,8 +306,20 @@
                 document.getElementById('oral-grading').innerHTML = '<p style="text-align: center; color: #a0aec0;">No oral grading available</p>';
             }
 
-            // Transcript
-            document.getElementById('transcript').textContent = data.transcript || 'No transcript available';
+            // Manuscript section
+            const manuscriptHtml = data.manuscript_file_path
+                ? `<div style="margin-bottom: 15px;">
+                    <strong>File:</strong> ${data.manuscript_file_path.split('/').pop()}<br>
+                    <a href="/${data.manuscript_file_path}" target="_blank" style="color: #667eea; text-decoration: none; font-weight: 600;">📥 Download Original Manuscript</a>
+                   </div>
+                   <div style="background: #f7fafc; padding: 15px; border-radius: 4px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; font-size: 13px; line-height: 1.6; color: #2d3748;">
+                    ${data.manuscript_content || 'No manuscript text available'}
+                   </div>`
+                : '<p style="color: #a0aec0;">No manuscript available</p>';
+            document.getElementById('manuscript-section').innerHTML = manuscriptHtml;
+
+            // Oral transcript
+            document.getElementById('oral-transcript').textContent = data.oral_transcript || 'No oral exam transcript available';
 
             // Show content
             document.getElementById('loading').style.display = 'none';
@@ -315,7 +338,7 @@
             return `
                 <div class="grader-card">
                     <div class="grader-header">
-                        <div class="grader-name">${result.model}</div>
+                        <div class="grader-name">${result.model_display_name}</div>
                         <div class="grader-score">${result.score.toFixed(2)}/4.0</div>
                     </div>
                     ${categoriesHtml ? `<div class="categories">${categoriesHtml}</div>` : ''}
