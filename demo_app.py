@@ -168,50 +168,100 @@ def elevenlabs_webhook():
             print("[WEBHOOK ERROR] No conversation_id in webhook data")
             return jsonify({'error': 'No conversation_id'}), 400
 
-        print(f"[WEBHOOK] Processing conversation: {conversation_id}")
+        print(f"[WEBHOOK] Processing conversation: {conversation_id}, agent: {agent_id}")
 
-        # Find exam session by conversation_id (need to add this field to database)
-        # For now, find most recent pending exam
-        exams = db.get_all_exams(limit=10)
-        exam = next((e for e in exams if e.get('status') == 'pending'), None)
+        # Find exam session by agent_id (more reliable than finding pending exam)
+        exam = None
+        if agent_id:
+            print(f"[WEBHOOK] Looking for exam with agent_id: {agent_id}")
+            exams = db.get_all_exams(limit=50)
+            exam = next((e for e in exams if e.get('agent_id') == agent_id), None)
+            if exam:
+                print(f"[WEBHOOK] Found exam by agent_id: session {exam['id']}")
+
+        # Fallback to most recent pending exam if no agent_id match
+        if not exam:
+            print("[WEBHOOK] No agent_id match, trying most recent pending exam")
+            exams = db.get_all_exams(limit=10)
+            exam = next((e for e in exams if e.get('status') == 'pending'), None)
 
         if not exam:
-            print("[WEBHOOK ERROR] No pending exam session found")
+            print("[WEBHOOK ERROR] No matching exam session found")
             return jsonify({'error': 'No matching exam session'}), 404
 
         session_id = exam['id']
         print(f"[WEBHOOK] Matched to exam session {session_id}")
 
-        # Fetch transcript from ElevenLabs
+        # Fetch transcript from ElevenLabs with comprehensive debugging
         elevenlabs_client = ElevenLabs(api_key=os.getenv('ELEVENLABS_API_KEY'))
+        oral_transcript = ""
 
         try:
-            # Get conversation history
-            conversation = elevenlabs_client.conversational_ai.get_conversation(conversation_id)
+            print(f"[WEBHOOK DEBUG] Fetching conversation details for {conversation_id}")
 
-            # Extract transcript
+            # Try the conversations.get() method (matches admin code)
+            conversation = elevenlabs_client.conversational_ai.conversations.get(conversation_id=conversation_id)
+            print(f"[WEBHOOK DEBUG] Conversation type: {type(conversation)}")
+            print(f"[WEBHOOK DEBUG] Conversation value: {conversation}")
+
+            # Extract transcript with extensive debugging
             transcript_lines = []
-            for message in conversation.get('messages', []):
-                role = message.get('role', 'unknown')
-                content = message.get('message', '')
-                transcript_lines.append(f"{role.upper()}: {content}")
+
+            # Try different ways to get messages
+            messages = None
+            if hasattr(conversation, 'messages'):
+                messages = conversation.messages
+                print(f"[WEBHOOK DEBUG] Got messages from attribute, count: {len(messages) if messages else 0}")
+            elif isinstance(conversation, dict) and 'messages' in conversation:
+                messages = conversation['messages']
+                print(f"[WEBHOOK DEBUG] Got messages from dict, count: {len(messages) if messages else 0}")
+            else:
+                print(f"[WEBHOOK DEBUG] No messages found, checking conversation structure...")
+                if hasattr(conversation, '__dict__'):
+                    print(f"[WEBHOOK DEBUG] Conversation attributes: {conversation.__dict__.keys()}")
+
+            if messages:
+                for i, message in enumerate(messages):
+                    print(f"[WEBHOOK DEBUG] Message {i} type: {type(message)}")
+
+                    role = None
+                    content = None
+
+                    if hasattr(message, 'role'):
+                        role = message.role
+                        content = message.message if hasattr(message, 'message') else ''
+                    elif isinstance(message, dict):
+                        role = message.get('role')
+                        content = message.get('message', '')
+
+                    if role and content:
+                        transcript_lines.append(f"{role.upper()}: {content}")
+                        print(f"[WEBHOOK DEBUG] Added message: {role} ({len(content)} chars)")
+                    else:
+                        print(f"[WEBHOOK DEBUG] Could not extract message {i}: role={role}, content_len={len(content) if content else 0}")
 
             oral_transcript = "\n\n".join(transcript_lines)
-            print(f"[WEBHOOK] Extracted transcript: {len(oral_transcript)} chars")
+            print(f"[WEBHOOK] Successfully extracted transcript: {len(oral_transcript)} chars, {len(transcript_lines)} messages")
+
+            if not oral_transcript:
+                print(f"[WEBHOOK WARNING] Transcript is empty!")
+                oral_transcript = "[Empty transcript - no messages found]"
 
         except Exception as e:
-            print(f"[WEBHOOK ERROR] Failed to fetch transcript: {e}")
-            # Use placeholder if fetch fails
+            print(f"[WEBHOOK ERROR] Failed to fetch transcript: {type(e).__name__}: {e}")
+            import traceback
+            print(f"[WEBHOOK DEBUG] Traceback: {traceback.format_exc()}")
             oral_transcript = f"[Transcript fetch failed: {str(e)}]"
 
-        # Update exam session with transcript
+        # Update exam session with transcript and conversation_id
         db.update_exam_session(
             session_id,
             oral_transcript=oral_transcript,
+            conversation_id=conversation_id,
             status='completed',
             completed_at=datetime.now()
         )
-        print(f"[WEBHOOK] Updated exam session {session_id}")
+        print(f"[WEBHOOK] Updated exam session {session_id} with transcript ({len(oral_transcript)} chars)")
 
         # Trigger grading automatically
         try:
