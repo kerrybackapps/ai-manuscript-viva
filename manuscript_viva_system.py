@@ -311,6 +311,12 @@ Key Claims: {', '.join(analysis.get('key_claims', []))}
             return None
         print(f"      Agent created: {agent_id}")
 
+        # Store agent_id in exam session
+        self.db.update_exam_session(
+            exam_session['id'],
+            agent_id=agent_id
+        )
+
         print("\n" + "="*60)
         print("SUBMISSION PROCESSED SUCCESSFULLY")
         print("="*60)

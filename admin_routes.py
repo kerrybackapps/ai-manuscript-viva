@@ -181,6 +181,59 @@ def grade_exam_admin(session_id):
     """Manually trigger grading for an exam session"""
     try:
         from demo_app import system
+        from elevenlabs.client import ElevenLabs
+        import os
+
+        # Get exam session
+        exam = db.get_exam_session(session_id)
+        if not exam:
+            return jsonify({'success': False, 'error': 'Exam session not found'}), 404
+
+        # Fetch transcript from ElevenLabs if not already present
+        if not exam.get('oral_transcript') and exam.get('agent_id'):
+            print(f"[ADMIN GRADING] Fetching transcript for agent {exam['agent_id']}")
+
+            try:
+                elevenlabs_client = ElevenLabs(api_key=os.getenv('ELEVENLABS_API_KEY'))
+
+                # Get all conversations for this agent
+                conversations = elevenlabs_client.conversational_ai.get_conversations(agent_id=exam['agent_id'])
+
+                if conversations and len(conversations) > 0:
+                    # Get the most recent conversation
+                    latest_conversation = conversations[0]
+                    conversation_id = latest_conversation.get('conversation_id')
+
+                    print(f"[ADMIN GRADING] Found conversation: {conversation_id}")
+
+                    # Get conversation details
+                    conversation = elevenlabs_client.conversational_ai.get_conversation(conversation_id)
+
+                    # Extract transcript
+                    transcript_lines = []
+                    for message in conversation.get('messages', []):
+                        role = message.get('role', 'unknown')
+                        content = message.get('message', '')
+                        transcript_lines.append(f"{role.upper()}: {content}")
+
+                    oral_transcript = "\n\n".join(transcript_lines)
+                    print(f"[ADMIN GRADING] Extracted transcript: {len(oral_transcript)} chars")
+
+                    # Update exam session with transcript
+                    db.update_exam_session(
+                        session_id,
+                        oral_transcript=oral_transcript,
+                        conversation_id=conversation_id,
+                        status='completed'
+                    )
+                else:
+                    print("[ADMIN GRADING] No conversations found for this agent")
+
+            except Exception as e:
+                print(f"[ADMIN GRADING ERROR] Failed to fetch transcript: {e}")
+                # Continue with grading even if transcript fetch fails
+
+        # Proceed with grading
         results = system.grade_manuscript_and_oral(session_id)
         if results:
             return jsonify({'success': True, 'message': 'Grading completed successfully'})

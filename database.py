@@ -42,6 +42,8 @@ class ExamSession(Base):
     student_name = Column(String(100), nullable=False)
     exam_type = Column(String(50))  # 'project', 'case_study', etc.
     status = Column(String(20), default='pending')  # pending, in_progress, completed, failed
+    agent_id = Column(String(100))  # ElevenLabs agent ID
+    conversation_id = Column(String(100))  # ElevenLabs conversation ID
     transcript = Column(Text)  # Legacy: combined manuscript + oral transcript
     manuscript_content = Column(Text)  # Extracted manuscript text
     manuscript_file_path = Column(String(500))  # Path to uploaded file
@@ -57,6 +59,8 @@ class ExamSession(Base):
             'student_name': self.student_name,
             'exam_type': self.exam_type,
             'status': self.status,
+            'agent_id': self.agent_id,
+            'conversation_id': self.conversation_id,
             'transcript': self.transcript,
             'manuscript_content': self.manuscript_content,
             'manuscript_file_path': self.manuscript_file_path,
