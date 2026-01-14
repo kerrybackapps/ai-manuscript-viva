@@ -189,57 +189,23 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Student</th>
                         <th>Date</th>
-                        <th>Type</th>
-                        <th>Manuscript</th>
-                        <th>Oral</th>
-                        <th>Status</th>
-                        <th>Action</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for session in sessions %}
                     <tr>
-                        <td>{{ session.id }}</td>
                         <td><strong>{{ session.student_name }}</strong></td>
                         <td>{{ session.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td><span class="badge badge-info">{{ session.exam_type }}</span></td>
-                        <td>
-                            {% if session.manuscript_avg %}
-                                {% set avg = session.manuscript_avg %}
-                                <span class="score {% if avg >= 3.5 %}score-high{% elif avg >= 2.5 %}score-mid{% else %}score-low{% endif %}">
-                                    {{ "%.2f"|format(avg) }}/4.0
-                                </span>
-                            {% else %}
-                                <span class="badge badge-warning">Not Graded</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if session.oral_avg %}
-                                {% set avg = session.oral_avg %}
-                                <span class="score {% if avg >= 3.5 %}score-high{% elif avg >= 2.5 %}score-mid{% else %}score-low{% endif %}">
-                                    {{ "%.2f"|format(avg) }}/4.0
-                                </span>
-                            {% else %}
-                                <span class="badge badge-warning">Not Graded</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if session.has_grades %}
-                                <span class="badge badge-success">Graded ({{ session.grader_count }} models)</span>
-                            {% else %}
-                                <span class="badge badge-warning">Pending</span>
-                            {% endif %}
-                        </td>
                         <td>
                             <a href="/admin/exam/{{ session.id }}" class="btn btn-primary">View Details</a>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 40px; color: #a0aec0;">
+                        <td colspan="3" style="text-align: center; padding: 40px; color: #a0aec0;">
                             No exam sessions yet
                         </td>
                     </tr>
