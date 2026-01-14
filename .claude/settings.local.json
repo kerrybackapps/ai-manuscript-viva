@@ -13,7 +13,9 @@
       "Bash(gh repo create:*)",
       "Bash(koyeb service create:*)",
       "Bash(curl:*)",
-      "Bash(bash)"
+      "Bash(bash)",
+      "Bash(pip install:*)",
+      "Bash(=1.0.0)"
     ],
     "deny": [],
     "ask": []

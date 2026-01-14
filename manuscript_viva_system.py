@@ -77,7 +77,7 @@ class ManuscriptAnalyzer:
     def analyze_manuscript(self, manuscript_text: str, assignment_prompt: str) -> dict:
         """
         Analyze manuscript before oral exam
-        Identifies key claims, methodology, and areas to probe
+        Identifies key claims, methodology, and generates exactly 5 specific questions
         """
 
         analysis_prompt = f"""You are preparing an oral examination for a student's manuscript.
@@ -89,15 +89,20 @@ STUDENT'S MANUSCRIPT:
 {manuscript_text}
 
 YOUR TASK:
-Analyze this manuscript to prepare for the oral examination. Identify:
+Analyze this manuscript and generate EXACTLY 5 specific questions for the oral examination.
 
-1. KEY CLAIMS (3-5 main arguments or findings)
-2. METHODOLOGY/APPROACH (how they conducted their work)
-3. EVIDENCE QUALITY (strength of their supporting evidence)
-4. GAPS OR WEAKNESSES (areas that need clarification)
-5. QUESTION AREAS (5-7 specific topics to probe during oral exam)
+The 5 questions MUST follow this structure:
+1. CONTENT - Ask about a specific key point or claim in their manuscript
+2. REASONING - Why did they take a particular approach or make a specific choice?
+3. EVIDENCE - What evidence supports a specific position they took?
+4. ALTERNATIVES - What other approaches did they consider or could have considered?
+5. LIMITATIONS - What are the limitations of their work or analysis?
 
-Provide your analysis in a structured format that will help the examiner ask targeted questions.
+Each question should:
+- Reference specific content from the manuscript
+- Be clear and concise
+- Test genuine understanding (not just recall)
+- Be answerable in 1-2 minutes
 
 Format as JSON:
 {{
@@ -105,9 +110,12 @@ Format as JSON:
     "methodology": "description of their approach",
     "evidence_quality": "assessment of evidence strength",
     "gaps": ["gap 1", "gap 2", ...],
-    "question_areas": [
-        {{"topic": "...", "question": "..."}},
-        ...
+    "exam_questions": [
+        {{"number": 1, "category": "CONTENT", "question": "..."}},
+        {{"number": 2, "category": "REASONING", "question": "..."}},
+        {{"number": 3, "category": "EVIDENCE", "question": "..."}},
+        {{"number": 4, "category": "ALTERNATIVES", "question": "..."}},
+        {{"number": 5, "category": "LIMITATIONS", "question": "..."}}
     ],
     "overall_impression": "brief assessment"
 }}
@@ -138,7 +146,7 @@ Format as JSON:
                 "methodology": "Unable to analyze",
                 "evidence_quality": "Unable to assess",
                 "gaps": [],
-                "question_areas": [],
+                "exam_questions": [],
                 "overall_impression": "Analysis failed"
             }
 
@@ -153,71 +161,47 @@ class ManuscriptVivaSystem:
         self.council = GradingCouncil()
 
     def create_examiner_agent(self, manuscript_text: str, assignment_prompt: str, analysis: dict):
-        """Create ElevenLabs agent with improved prompt strategy"""
+        """Create ElevenLabs agent with pre-generated questions"""
 
-        # Build question areas from analysis
-        question_areas_text = "\n".join([
-            f"- {qa['topic']}: {qa['question']}"
-            for qa in analysis.get('question_areas', [])
+        # Extract the 5 pre-generated questions
+        exam_questions = analysis.get('exam_questions', [])
+
+        # Format questions for the agent
+        questions_text = "\n\n".join([
+            f"QUESTION {q['number']} ({q['category']}):\n{q['question']}"
+            for q in exam_questions
         ])
 
-        agent_prompt = f"""You are an oral examiner conducting a viva voce on a student's manuscript.
+        agent_prompt = f"""You are an oral examiner conducting a viva voce examination based on a student's submitted manuscript.
 
-YOUR OBJECTIVE:
-Test whether the student truly understands their own work, the choices they made,
-and the alternatives they considered.
+IMPORTANT: When the call connects, YOU MUST SPEAK FIRST. Immediately greet the student with: "Hello! I've read your manuscript carefully and I'm ready to begin your oral examination. Let's start with the first question."
 
-ASSIGNMENT:
-{assignment_prompt}
+EXAMINATION STRUCTURE (MANDATORY):
+- YOU speak first - greet them and ask the first question immediately
+- Ask EXACTLY these 5 questions IN ORDER, then END THE EXAM
+- Ask one question at a time
+- After the student answers question 5, IMMEDIATELY end the exam
 
-MANUSCRIPT SUMMARY:
-The student wrote about: {analysis.get('overall_impression', 'various topics')}
+YOUR 5 QUESTIONS (ask these EXACTLY in this order):
 
-Key claims made:
-{chr(10).join(['- ' + claim for claim in analysis.get('key_claims', [])])}
-
-FULL MANUSCRIPT TEXT:
-{manuscript_text}
-
-QUESTIONING STRATEGY:
-You will ask 10-12 questions across these categories:
-
-1. CONTENT UNDERSTANDING (3-4 questions)
-   - "In your manuscript, you stated [specific claim]. Can you explain that in your own words?"
-   - "What was the main argument of your paper?"
-   - "Can you summarize your key findings?"
-
-2. REASONING & CHOICES (3-4 questions)
-   - "Why did you choose [specific methodology/approach]?"
-   - "You decided to focus on [X] rather than [Y]. What led to that decision?"
-   - "What was your reasoning for [specific choice]?"
-
-3. ALTERNATIVES CONSIDERED (2-3 questions)
-   - "What other approaches did you consider?"
-   - "If you had to argue the opposite position, what would you say?"
-   - "What were the trade-offs in your approach?"
-
-4. DEPTH & LIMITATIONS (2-3 questions)
-   - "What are the limitations of your analysis?"
-   - "How would you respond to someone who challenged [specific claim]?"
-   - "If you could expand this work, what would you explore?"
-
-SPECIFIC AREAS TO PROBE:
-{question_areas_text}
+{questions_text}
 
 EXAMINATION RULES:
-- Ask ONE question at a time - never stack multiple questions
-- Reference specific parts of their manuscript
-- Quote their exact words when referencing their work
-- If answers are superficial, probe deeper: "Can you elaborate?"
-- If unsure they understand, ask: "Can you give an example?"
-- Allow 15-20 seconds of silence for thinking
-- Use follow-up questions based on their answers
-- After 10-12 substantive questions, say: "EXAMINATION_COMPLETE"
+- Ask question 1, wait for answer
+- Ask question 2, wait for answer
+- Ask question 3, wait for answer
+- Ask question 4, wait for answer
+- Ask question 5, wait for answer
+- After they answer question 5, END IMMEDIATELY
 
-FIRST MESSAGE:
-Start by greeting them and asking about a specific aspect from their opening section.
-"""
+ENDING THE EXAM (MANDATORY):
+- After question 5 is answered, you MUST end the exam immediately
+- Say: "Thank you for your responses. That completes the examination. Please hang up now to submit your exam for grading."
+- Then STOP TALKING - do not respond to anything else
+- Do NOT ask follow-up questions
+- Do NOT ask additional questions
+
+Be professional and focused. Ask exactly these 5 questions in order, no more, no less. You must speak first when the call starts!"""
 
         try:
             response = self.elevenlabs.conversational_ai.agents.create(
@@ -227,7 +211,7 @@ Start by greeting them and asking about a specific aspect from their opening sec
                         "prompt": {
                             "prompt": agent_prompt
                         },
-                        "first_message": "Hello! I've carefully read your manuscript. Let's begin the oral examination. I'd like to start by asking you about your main argument..."
+                        "first_message": f"Hello! I've read your manuscript carefully and I'm ready to begin your oral examination. Let's start with the first question. {exam_questions[0]['question'] if exam_questions else 'Can you explain your main argument?'}"
                     }
                 }
             )
