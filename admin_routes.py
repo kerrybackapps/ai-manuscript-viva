@@ -207,44 +207,35 @@ def grade_exam_admin(session_id):
                     print(f"[DEBUG] Number of conversations: {len(conversations)}")
 
                     if conversations:
-                        first_conv = conversations[0]
-                        print(f"[DEBUG] First conversation type: {type(first_conv)}")
-                        print(f"[DEBUG] First conversation value: {first_conv}")
+                        first_item = conversations[0]
+                        print(f"[DEBUG] First item type: {type(first_item)}")
 
-                        # If it's a tuple, check what's in it
-                        if isinstance(first_conv, tuple):
-                            print(f"[DEBUG] Tuple length: {len(first_conv)}")
-                            for i, item in enumerate(first_conv):
-                                print(f"[DEBUG] Tuple[{i}] type: {type(item)}, value: {item}")
+                        # Handle tuple structure: ('conversations', [actual conversation list])
+                        actual_conversations = []
+                        if isinstance(first_item, tuple) and len(first_item) == 2:
+                            print(f"[DEBUG] Item is tuple with {len(first_item)} elements")
+                            print(f"[DEBUG] Tuple[0]: {first_item[0]}")
+                            print(f"[DEBUG] Tuple[1] type: {type(first_item[1])}")
+                            if isinstance(first_item[1], list):
+                                actual_conversations = first_item[1]
+                                print(f"[DEBUG] Extracted {len(actual_conversations)} conversations from tuple")
+                        else:
+                            actual_conversations = [first_item]
+                            print(f"[DEBUG] Using first_item directly")
 
-                        # Try different ways to extract conversation_id
+                        # Now get conversation_id from the actual conversation object
                         conversation_id = None
+                        if actual_conversations:
+                            first_conv = actual_conversations[0]
+                            print(f"[DEBUG] First conversation type: {type(first_conv)}")
 
-                        # Method 1: Direct attribute
-                        if hasattr(first_conv, 'conversation_id'):
-                            conversation_id = first_conv.conversation_id
-                            print(f"[DEBUG] Got ID from attribute: {conversation_id}")
-
-                        # Method 2: Dict access
-                        elif isinstance(first_conv, dict):
-                            conversation_id = first_conv.get('conversation_id')
-                            print(f"[DEBUG] Got ID from dict: {conversation_id}")
-
-                        # Method 3: Tuple - conversation_id might be the tuple itself or first element
-                        elif isinstance(first_conv, tuple):
-                            # Try tuple itself as string
-                            if len(first_conv) == 1 and isinstance(first_conv[0], str):
-                                conversation_id = first_conv[0]
-                                print(f"[DEBUG] Got ID from tuple[0]: {conversation_id}")
-                            # Try direct conversion
-                            elif all(isinstance(item, str) for item in first_conv):
-                                conversation_id = ''.join(first_conv)
-                                print(f"[DEBUG] Got ID from tuple join: {conversation_id}")
-
-                        # Method 4: Direct string
-                        elif isinstance(first_conv, str):
-                            conversation_id = first_conv
-                            print(f"[DEBUG] Conversation IS the ID: {conversation_id}")
+                            # Extract conversation_id
+                            if hasattr(first_conv, 'conversation_id'):
+                                conversation_id = first_conv.conversation_id
+                                print(f"[DEBUG] Got conversation_id from attribute: {conversation_id}")
+                            elif isinstance(first_conv, dict):
+                                conversation_id = first_conv.get('conversation_id')
+                                print(f"[DEBUG] Got conversation_id from dict: {conversation_id}")
 
                         if conversation_id:
                             print(f"[ADMIN GRADING] Successfully extracted conversation_id: {conversation_id}")
