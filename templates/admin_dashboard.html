@@ -256,15 +256,16 @@
                 'Choose grading model set:\n\n' +
                 '1 - Fast (Sonnet 4.5 + GPT-4o - ~30 seconds)\n' +
                 '2 - Full (Opus 4.5 + GPT-5.2 + Gemini 3.0 - ~2 minutes)\n' +
-                '3 - Sonnet only (~15 seconds)\n\n' +
-                'Enter 1, 2, or 3:'
+                '3 - Sonnet only (~15 seconds)\n' +
+                '4 - Gemini Flash only (~10 seconds)\n\n' +
+                'Enter 1, 2, 3, or 4:'
             );
 
             if (!choice) return;
 
             const modelSet = choice.trim();
-            if (!['1', '2', '3'].includes(modelSet)) {
-                alert('Invalid choice. Please enter 1, 2, or 3.');
+            if (!['1', '2', '3', '4'].includes(modelSet)) {
+                alert('Invalid choice. Please enter 1, 2, 3, or 4.');
                 return;
             }
 
@@ -277,7 +278,8 @@
             const modelDescriptions = {
                 '1': 'Fast models',
                 '2': 'Full models',
-                '3': 'Sonnet only'
+                '3': 'Sonnet only',
+                '4': 'Gemini Flash only'
             };
 
             // Disable button and show loading state

@@ -40,7 +40,9 @@ class GradingCouncil:
             raise ImportError("google-generativeai package not installed. Run: pip install google-generativeai")
 
         genai.configure(api_key=google_key)
-        self.gemini_model = genai.GenerativeModel('gemini-3.0')
+        # Initialize both Gemini models
+        self.gemini_pro_model = genai.GenerativeModel('gemini-3.0')
+        self.gemini_flash_model = genai.GenerativeModel('gemini-2.5-flash')
 
         # All three models are required
         self.available_models = ['claude', 'gpt', 'gemini']
@@ -148,10 +150,12 @@ Format your response as JSON:
             print(f"GPT grading error ({model}): {e}")
             return {"error": str(e), "model": f"GPT-{model}"}
 
-    def grade_with_gemini(self, prompt: str) -> Dict:
+    def grade_with_gemini(self, prompt: str, model: str = "gemini-3.0") -> Dict:
         """Get grade from Gemini"""
         try:
-            response = self.gemini_model.generate_content(prompt)
+            # Select the appropriate model
+            gemini_instance = self.gemini_pro_model if model == "gemini-3.0" else self.gemini_flash_model
+            response = gemini_instance.generate_content(prompt)
             result = response.text
             # Extract JSON from markdown code blocks if present
             if "```json" in result:
@@ -160,8 +164,8 @@ Format your response as JSON:
                 result = result.split("```")[1].split("```")[0].strip()
             return json.loads(result)
         except Exception as e:
-            print(f"Gemini grading error: {e}")
-            return {"error": str(e), "model": "Gemini"}
+            print(f"Gemini grading error ({model}): {e}")
+            return {"error": str(e), "model": f"Gemini-{model}"}
 
     def conduct_grading(self, transcript: str, rubric: str, deliberation_rounds: int = 1, model_set: str = '2') -> Dict:
         """
@@ -171,7 +175,8 @@ Format your response as JSON:
             transcript: The exam transcript to grade
             rubric: The grading rubric
             deliberation_rounds: Number of deliberation rounds (default 1)
-            model_set: '1' = Fast (Sonnet + GPT-4o), '2' = Full (Opus + GPT-5 + Gemini), '3' = Sonnet only
+            model_set: '1' = Fast (Sonnet + GPT-4o), '2' = Full (Opus + GPT-5 + Gemini 3.0),
+                      '3' = Sonnet only, '4' = Gemini Flash only
 
         Returns:
             Dictionary containing all grades and convergence metrics
@@ -181,6 +186,8 @@ Format your response as JSON:
             models_to_use = ['claude-sonnet', 'gpt-4o']
         elif model_set == '3':  # Sonnet only
             models_to_use = ['claude-sonnet']
+        elif model_set == '4':  # Gemini Flash only
+            models_to_use = ['gemini-flash']
         else:  # '2' or default - Full
             models_to_use = self.available_models
 
@@ -217,7 +224,11 @@ Format your response as JSON:
 
         if 'gemini' in models_to_use:
             print("  - Gemini 3.0 grading...")
-            round_1_grades['gemini'] = self.grade_with_gemini(initial_prompt)
+            round_1_grades['gemini'] = self.grade_with_gemini(initial_prompt, model='gemini-3.0')
+
+        if 'gemini-flash' in models_to_use:
+            print("  - Gemini 2.5 Flash grading...")
+            round_1_grades['gemini-flash'] = self.grade_with_gemini(initial_prompt, model='gemini-2.5-flash')
 
         results = {
             "round_1": round_1_grades
@@ -251,7 +262,9 @@ Format your response as JSON:
                 elif model == 'gpt-4o':
                     current_round_grades['gpt-4o'] = self.grade_with_gpt(deliberation_prompt, model='gpt-4o')
                 elif model == 'gemini':
-                    current_round_grades['gemini'] = self.grade_with_gemini(deliberation_prompt)
+                    current_round_grades['gemini'] = self.grade_with_gemini(deliberation_prompt, model='gemini-3.0')
+                elif model == 'gemini-flash':
+                    current_round_grades['gemini-flash'] = self.grade_with_gemini(deliberation_prompt, model='gemini-2.5-flash')
 
             results[f"round_{round_num}"] = current_round_grades
 

@@ -186,7 +186,6 @@ def grade_exam_admin(session_id):
     """Manually trigger grading for an exam session"""
     try:
         from demo_app import system
-        from elevenlabs.client import ElevenLabs
         import os
 
         # Get model_set from request JSON
@@ -203,122 +202,55 @@ def grade_exam_admin(session_id):
             print(f"[ADMIN GRADING] Fetching transcript for agent {exam['agent_id']}")
 
             try:
-                elevenlabs_client = ElevenLabs(api_key=os.getenv('ELEVENLABS_API_KEY'))
+                import requests
+                api_key = os.getenv('ELEVENLABS_API_KEY')
+                agent_id = exam['agent_id']
+                headers = {"xi-api-key": api_key}
 
-                # DEBUG: Try to get conversations
-                print("[DEBUG] Attempting to list conversations...")
-                try:
-                    conversations_response = elevenlabs_client.conversational_ai.conversations.list(agent_id=exam['agent_id'])
-                    print(f"[DEBUG] Response type: {type(conversations_response)}")
+                # List recent conversations for this agent
+                list_url = f"https://api.elevenlabs.io/v1/convai/conversations?agent_id={agent_id}"
+                list_response = requests.get(list_url, headers=headers)
+                list_response.raise_for_status()
+                conversations = list_response.json().get('conversations', [])
 
-                    # Try to get the first item to see structure
-                    conversations = list(conversations_response) if conversations_response else []
-                    print(f"[DEBUG] Number of conversations: {len(conversations)}")
+                if conversations:
+                    # Get the most recent conversation
+                    conversation_id = conversations[0].get('conversation_id')
+                    print(f"[ADMIN GRADING] Found conversation {conversation_id}")
 
-                    if conversations:
-                        first_item = conversations[0]
-                        print(f"[DEBUG] First item type: {type(first_item)}")
+                    # Get conversation details with transcript
+                    detail_url = f"https://api.elevenlabs.io/v1/convai/conversations/{conversation_id}"
+                    detail_response = requests.get(detail_url, headers=headers)
+                    detail_response.raise_for_status()
+                    conversation_data = detail_response.json()
 
-                        # Handle tuple structure: ('conversations', [actual conversation list])
-                        actual_conversations = []
-                        if isinstance(first_item, tuple) and len(first_item) == 2:
-                            print(f"[DEBUG] Item is tuple with {len(first_item)} elements")
-                            print(f"[DEBUG] Tuple[0]: {first_item[0]}")
-                            print(f"[DEBUG] Tuple[1] type: {type(first_item[1])}")
-                            if isinstance(first_item[1], list):
-                                actual_conversations = first_item[1]
-                                print(f"[DEBUG] Extracted {len(actual_conversations)} conversations from tuple")
-                        else:
-                            actual_conversations = [first_item]
-                            print(f"[DEBUG] Using first_item directly")
+                    # Extract transcript - simple array with role and message
+                    transcript = conversation_data.get('transcript', [])
+                    transcript_lines = [
+                        f"{entry.get('role', 'unknown').upper()}: {entry.get('message', '')}"
+                        for entry in transcript
+                        if entry.get('message')
+                    ]
 
-                        # Now get conversation_id from the actual conversation object
-                        conversation_id = None
-                        if actual_conversations:
-                            first_conv = actual_conversations[0]
-                            print(f"[DEBUG] First conversation type: {type(first_conv)}")
+                    oral_transcript = "\n\n".join(transcript_lines)
+                    print(f"[ADMIN GRADING] Extracted transcript: {len(oral_transcript)} chars, {len(transcript_lines)} messages")
 
-                            # Extract conversation_id
-                            if hasattr(first_conv, 'conversation_id'):
-                                conversation_id = first_conv.conversation_id
-                                print(f"[DEBUG] Got conversation_id from attribute: {conversation_id}")
-                            elif isinstance(first_conv, dict):
-                                conversation_id = first_conv.get('conversation_id')
-                                print(f"[DEBUG] Got conversation_id from dict: {conversation_id}")
-
-                        if conversation_id:
-                            print(f"[ADMIN GRADING] Successfully extracted conversation_id: {conversation_id}")
-
-                            # Get conversation details
-                            print(f"[DEBUG] Fetching conversation details...")
-                            conversation = elevenlabs_client.conversational_ai.conversations.get(conversation_id=conversation_id)
-                            print(f"[DEBUG] Conversation details type: {type(conversation)}")
-
-                            # Extract transcript - API uses 'transcript' field not 'messages'
-                            transcript_lines = []
-
-                            # Get transcript from conversation (list of transcript entries)
-                            transcript_entries = None
-                            if hasattr(conversation, 'transcript'):
-                                transcript_entries = conversation.transcript
-                                print(f"[DEBUG] Got transcript from attribute, count: {len(transcript_entries) if transcript_entries else 0}")
-                            elif isinstance(conversation, dict) and 'transcript' in conversation:
-                                transcript_entries = conversation['transcript']
-                                print(f"[DEBUG] Got transcript from dict, count: {len(transcript_entries) if transcript_entries else 0}")
-                            else:
-                                print(f"[DEBUG] No transcript field found, checking conversation structure...")
-                                if hasattr(conversation, '__dict__'):
-                                    print(f"[DEBUG] Conversation attributes: {list(conversation.__dict__.keys())}")
-
-                            if transcript_entries:
-                                for i, entry in enumerate(transcript_entries):
-                                    print(f"[DEBUG] Transcript entry {i} type: {type(entry)}")
-
-                                    role = None
-                                    content = None
-
-                                    # According to ElevenLabs API docs, each entry has 'role' and 'message'
-                                    if hasattr(entry, 'role'):
-                                        role = entry.role
-                                        content = entry.message if hasattr(entry, 'message') else None
-                                    elif isinstance(entry, dict):
-                                        role = entry.get('role')
-                                        content = entry.get('message')
-
-                                    if role and content:
-                                        transcript_lines.append(f"{role.upper()}: {content}")
-                                        print(f"[DEBUG] Added entry: {role} ({len(content)} chars)")
-                                    else:
-                                        print(f"[DEBUG] Skipped entry {i}: role={role}, content={'<empty>' if not content else '<present>'}")
-
-                            oral_transcript = "\n\n".join(transcript_lines)
-                            print(f"[ADMIN GRADING] Successfully extracted transcript: {len(oral_transcript)} chars, {len(transcript_lines)} messages")
-
-                            if len(oral_transcript) > 0:
-                                # Update exam session with transcript
-                                db.update_exam_session(
-                                    session_id,
-                                    oral_transcript=oral_transcript,
-                                    conversation_id=conversation_id,
-                                    status='completed'
-                                )
-                                print(f"[ADMIN GRADING] Transcript saved to database")
-                            else:
-                                print(f"[ADMIN GRADING WARNING] Transcript is empty")
-                        else:
-                            print(f"[ADMIN GRADING ERROR] Could not extract conversation_id from response")
-                    else:
-                        print("[ADMIN GRADING] No conversations found for this agent")
-
-                except Exception as inner_e:
-                    print(f"[DEBUG ERROR] Exception during conversation fetch: {type(inner_e).__name__}: {inner_e}")
-                    import traceback
-                    print(f"[DEBUG] Traceback: {traceback.format_exc()}")
+                    if oral_transcript:
+                        # Update exam session with transcript
+                        db.update_exam_session(
+                            session_id,
+                            oral_transcript=oral_transcript,
+                            conversation_id=conversation_id,
+                            status='completed'
+                        )
+                        print(f"[ADMIN GRADING] Transcript saved to database")
+                else:
+                    print("[ADMIN GRADING] No conversations found for this agent")
 
             except Exception as e:
                 print(f"[ADMIN GRADING ERROR] Failed to fetch transcript: {e}")
                 import traceback
-                print(f"[DEBUG] Outer traceback: {traceback.format_exc()}")
+                traceback.print_exc()
                 # Continue with grading even if transcript fetch fails
 
         # Proceed with grading with selected model set
@@ -463,52 +395,39 @@ def edit_setting(setting_key):
 @admin_bp.route('/test-transcript', methods=['GET'])
 @admin_required
 def test_transcript():
-    """Test endpoint for ElevenLabs transcript retrieval"""
-    from elevenlabs.client import ElevenLabs
+    """Test endpoint for ElevenLabs transcript retrieval using direct REST API"""
+    import requests
 
     try:
-        elevenlabs_client = ElevenLabs(api_key=os.getenv('ELEVENLABS_API_KEY'))
+        api_key = os.getenv('ELEVENLABS_API_KEY')
         agent_id = os.getenv('ELEVENLABS_AGENT_ID')
+        headers = {"xi-api-key": api_key}
 
         # List recent conversations
-        conversations_response = elevenlabs_client.conversational_ai.conversations.list(agent_id=agent_id)
-
-        # Extract conversations from tuple if needed
-        if isinstance(conversations_response, tuple):
-            conversations = list(conversations_response[1]) if len(conversations_response) > 1 else []
-        else:
-            conversations = list(conversations_response) if conversations_response else []
+        list_url = f"https://api.elevenlabs.io/v1/convai/conversations?agent_id={agent_id}"
+        list_response = requests.get(list_url, headers=headers)
+        list_response.raise_for_status()
+        conversations = list_response.json().get('conversations', [])[:3]
 
         results = []
-        for conv in conversations[:3]:  # Test first 3 conversations
-            conv_id = conv.conversation_id if hasattr(conv, 'conversation_id') else conv.get('conversation_id')
+        for conv in conversations:
+            conv_id = conv.get('conversation_id')
+            if not conv_id:
+                continue
 
-            # Fetch full conversation
-            conversation = elevenlabs_client.conversational_ai.conversations.get(conversation_id=conv_id)
+            # Get conversation details with transcript
+            detail_url = f"https://api.elevenlabs.io/v1/convai/conversations/{conv_id}"
+            detail_response = requests.get(detail_url, headers=headers)
+            detail_response.raise_for_status()
+            conversation_data = detail_response.json()
 
-            # Extract transcript
-            transcript_lines = []
-            transcript_entries = None
-
-            if hasattr(conversation, 'transcript'):
-                transcript_entries = conversation.transcript
-            elif isinstance(conversation, dict) and 'transcript' in conversation:
-                transcript_entries = conversation['transcript']
-
-            if transcript_entries:
-                for entry in transcript_entries:
-                    role = None
-                    content = None
-
-                    if hasattr(entry, 'role'):
-                        role = entry.role
-                        content = entry.message if hasattr(entry, 'message') else None
-                    elif isinstance(entry, dict):
-                        role = entry.get('role')
-                        content = entry.get('message')
-
-                    if role and content:
-                        transcript_lines.append(f"{role.upper()}: {content[:100]}...")  # First 100 chars
+            # Extract transcript - simple array with role and message
+            transcript = conversation_data.get('transcript', [])
+            transcript_lines = [
+                f"{entry.get('role', 'unknown').upper()}: {entry.get('message', '')[:100]}..."
+                for entry in transcript
+                if entry.get('message')
+            ]
 
             results.append({
                 'conversation_id': conv_id,

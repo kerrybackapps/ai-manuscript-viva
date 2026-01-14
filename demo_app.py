@@ -153,7 +153,6 @@ def exam_page(session_id):
 def elevenlabs_webhook():
     """Handle ElevenLabs conversation completion webhook"""
     try:
-        from elevenlabs.client import ElevenLabs
         import json
 
         # Get webhook data
@@ -192,54 +191,30 @@ def elevenlabs_webhook():
         session_id = exam['id']
         print(f"[WEBHOOK] Matched to exam session {session_id}")
 
-        # Fetch transcript from ElevenLabs with comprehensive debugging
-        elevenlabs_client = ElevenLabs(api_key=os.getenv('ELEVENLABS_API_KEY'))
+        # Fetch transcript from ElevenLabs using simple REST API
+        import requests
         oral_transcript = ""
 
         try:
-            print(f"[WEBHOOK DEBUG] Fetching conversation details for {conversation_id}")
+            print(f"[WEBHOOK] Fetching conversation {conversation_id}")
 
-            # Try the conversations.get() method (matches admin code)
-            conversation = elevenlabs_client.conversational_ai.conversations.get(conversation_id=conversation_id)
-            print(f"[WEBHOOK DEBUG] Conversation type: {type(conversation)}")
-            print(f"[WEBHOOK DEBUG] Conversation value: {conversation}")
+            api_key = os.getenv('ELEVENLABS_API_KEY')
+            detail_url = f"https://api.elevenlabs.io/v1/convai/conversations/{conversation_id}"
+            headers = {"xi-api-key": api_key}
 
-            # Extract transcript - API uses 'transcript' field not 'messages'
-            transcript_lines = []
+            response = requests.get(detail_url, headers=headers)
+            response.raise_for_status()
+            conversation_data = response.json()
 
-            # Get transcript from conversation (list of transcript entries)
-            transcript_entries = None
-            if hasattr(conversation, 'transcript'):
-                transcript_entries = conversation.transcript
-                print(f"[WEBHOOK DEBUG] Got transcript from attribute, count: {len(transcript_entries) if transcript_entries else 0}")
-            elif isinstance(conversation, dict) and 'transcript' in conversation:
-                transcript_entries = conversation['transcript']
-                print(f"[WEBHOOK DEBUG] Got transcript from dict, count: {len(transcript_entries) if transcript_entries else 0}")
-            else:
-                print(f"[WEBHOOK DEBUG] No transcript field found, checking conversation structure...")
-                if hasattr(conversation, '__dict__'):
-                    print(f"[WEBHOOK DEBUG] Conversation attributes: {list(conversation.__dict__.keys())}")
+            # Extract transcript - simple array with role and message
+            transcript = conversation_data.get('transcript', [])
+            print(f"[WEBHOOK] Found {len(transcript)} transcript entries")
 
-            if transcript_entries:
-                for i, entry in enumerate(transcript_entries):
-                    print(f"[WEBHOOK DEBUG] Transcript entry {i} type: {type(entry)}")
-
-                    role = None
-                    content = None
-
-                    # According to ElevenLabs API docs, each entry has 'role' and 'message'
-                    if hasattr(entry, 'role'):
-                        role = entry.role
-                        content = entry.message if hasattr(entry, 'message') else None
-                    elif isinstance(entry, dict):
-                        role = entry.get('role')
-                        content = entry.get('message')
-
-                    if role and content:
-                        transcript_lines.append(f"{role.upper()}: {content}")
-                        print(f"[WEBHOOK DEBUG] Added entry: {role} ({len(content)} chars)")
-                    else:
-                        print(f"[WEBHOOK DEBUG] Skipped entry {i}: role={role}, content={'<empty>' if not content else '<present>'}")
+            transcript_lines = [
+                f"{entry.get('role', 'unknown').upper()}: {entry.get('message', '')}"
+                for entry in transcript
+                if entry.get('message')
+            ]
 
             oral_transcript = "\n\n".join(transcript_lines)
             print(f"[WEBHOOK] Successfully extracted transcript: {len(oral_transcript)} chars, {len(transcript_lines)} messages")
