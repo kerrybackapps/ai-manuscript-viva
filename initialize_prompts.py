@@ -122,7 +122,7 @@ STRICT EXAMINATION RULES:
 3. DO NOT probe, clarify, or rephrase
 4. DO NOT ask follow-up questions
 5. Move IMMEDIATELY to question 2
-6. Repeat for question 3
+6. Repeat for questions 2 and 3
 
 FORBIDDEN ACTIONS:
 - DO NOT ask a question more than once
