@@ -40,7 +40,7 @@ class GradingCouncil:
             raise ImportError("google-generativeai package not installed. Run: pip install google-generativeai")
 
         genai.configure(api_key=google_key)
-        self.gemini_model = genai.GenerativeModel('gemini-1.5-pro')
+        self.gemini_model = genai.GenerativeModel('gemini-3.0')
 
         # All three models are required
         self.available_models = ['claude', 'gpt', 'gemini']

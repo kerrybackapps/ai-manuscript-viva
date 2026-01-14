@@ -197,24 +197,28 @@ def grade_exam_admin(session_id):
                 elevenlabs_client = ElevenLabs(api_key=os.getenv('ELEVENLABS_API_KEY'))
 
                 # Get all conversations for this agent
-                conversations = elevenlabs_client.conversational_ai.get_conversations(agent_id=exam['agent_id'])
+                conversations_response = elevenlabs_client.conversational_ai.conversations.list(agent_id=exam['agent_id'])
+
+                # Convert response to list
+                conversations = list(conversations_response) if conversations_response else []
 
                 if conversations and len(conversations) > 0:
                     # Get the most recent conversation
                     latest_conversation = conversations[0]
-                    conversation_id = latest_conversation.get('conversation_id')
+                    conversation_id = latest_conversation.conversation_id
 
                     print(f"[ADMIN GRADING] Found conversation: {conversation_id}")
 
                     # Get conversation details
-                    conversation = elevenlabs_client.conversational_ai.get_conversation(conversation_id)
+                    conversation = elevenlabs_client.conversational_ai.conversations.get(conversation_id=conversation_id)
 
                     # Extract transcript
                     transcript_lines = []
-                    for message in conversation.get('messages', []):
-                        role = message.get('role', 'unknown')
-                        content = message.get('message', '')
-                        transcript_lines.append(f"{role.upper()}: {content}")
+                    if hasattr(conversation, 'messages'):
+                        for message in conversation.messages:
+                            role = message.role if hasattr(message, 'role') else 'unknown'
+                            content = message.message if hasattr(message, 'message') else ''
+                            transcript_lines.append(f"{role.upper()}: {content}")
 
                     oral_transcript = "\n\n".join(transcript_lines)
                     print(f"[ADMIN GRADING] Extracted transcript: {len(oral_transcript)} chars")
