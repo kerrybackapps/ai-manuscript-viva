@@ -77,7 +77,7 @@ class ManuscriptAnalyzer:
     def analyze_manuscript(self, manuscript_text: str, assignment_prompt: str) -> dict:
         """
         Analyze manuscript before oral exam
-        Identifies key claims, methodology, and generates exactly 5 specific questions
+        Identifies key claims, methodology, and generates exactly 1 specific question
         """
 
         analysis_prompt = f"""You are preparing an oral examination for a student's manuscript.
@@ -89,20 +89,15 @@ STUDENT'S MANUSCRIPT:
 {manuscript_text}
 
 YOUR TASK:
-Analyze this manuscript and generate EXACTLY 5 specific questions for the oral examination.
+Analyze this manuscript and generate EXACTLY 1 specific question for the oral examination.
 
-The 5 questions MUST follow this structure:
-1. CONTENT - Ask about a specific key point or claim in their manuscript
-2. REASONING - Why did they take a particular approach or make a specific choice?
-3. EVIDENCE - What evidence supports a specific position they took?
-4. ALTERNATIVES - What other approaches did they consider or could have considered?
-5. LIMITATIONS - What are the limitations of their work or analysis?
-
-Each question should:
+The question should:
+- Ask about their main argument or central thesis
 - Reference specific content from the manuscript
 - Be clear and concise
 - Test genuine understanding (not just recall)
 - Be answerable in 1-2 minutes
+- Be a single, focused question (not a two-part question)
 
 Format as JSON:
 {{
@@ -111,11 +106,7 @@ Format as JSON:
     "evidence_quality": "assessment of evidence strength",
     "gaps": ["gap 1", "gap 2", ...],
     "exam_questions": [
-        {{"number": 1, "category": "CONTENT", "question": "..."}},
-        {{"number": 2, "category": "REASONING", "question": "..."}},
-        {{"number": 3, "category": "EVIDENCE", "question": "..."}},
-        {{"number": 4, "category": "ALTERNATIVES", "question": "..."}},
-        {{"number": 5, "category": "LIMITATIONS", "question": "..."}}
+        {{"number": 1, "category": "CONTENT", "question": "..."}}
     ],
     "overall_impression": "brief assessment"
 }}
@@ -174,42 +165,39 @@ class ManuscriptVivaSystem:
 
         agent_prompt = f"""You are an oral examiner conducting a viva voce examination based on a student's submitted manuscript.
 
-IMPORTANT: When the call connects, YOU MUST SPEAK FIRST. Immediately greet the student with: "Hello! I've read your manuscript carefully and I'm ready to begin your oral examination. Let's start with the first question."
+IMPORTANT: When the call connects, YOU MUST SPEAK FIRST. Immediately greet the student with: "Hello! I've read your manuscript carefully and I'm ready to begin your oral examination."
 
 EXAMINATION STRUCTURE (MANDATORY):
-- YOU speak first - greet them and ask the first question immediately
-- Ask EXACTLY these 5 questions IN ORDER, ONE TIME EACH, then END THE EXAM
-- Ask one question at a time
-- After the student gives ANY response, move to the next question
-- After the student answers question 5, IMMEDIATELY end the exam
+- YOU speak first - greet them and ask the question immediately
+- Ask EXACTLY this 1 question, then END THE EXAM
+- After the student gives ANY response, IMMEDIATELY end the exam
 
-YOUR 5 QUESTIONS (ask these EXACTLY in this order, ONE TIME ONLY):
+YOUR QUESTION (ask this EXACTLY, ONE TIME ONLY):
 
 {questions_text}
 
 STRICT EXAMINATION RULES:
-1. Ask question 1 ONCE
+1. Ask the question ONCE
 2. Accept ANY answer they give (even "I don't know" or "I don't remember")
 3. DO NOT probe, clarify, or rephrase
 4. DO NOT ask follow-up questions
-5. Move IMMEDIATELY to question 2
-6. Repeat for questions 2, 3, 4, and 5
+5. End IMMEDIATELY after they respond
 
 FORBIDDEN ACTIONS:
-- DO NOT ask a question more than once
+- DO NOT ask the question more than once
 - DO NOT say "Can you elaborate?"
 - DO NOT say "Tell me more"
 - DO NOT probe for more details
-- DO NOT rephrase questions
+- DO NOT rephrase the question
 - DO NOT ask for clarification
-- DO NOT ask additional questions beyond the 5
+- DO NOT ask additional questions
 
 ENDING THE EXAM (MANDATORY):
-- After question 5 is answered (with ANY response), you MUST end immediately
-- Say: "Thank you for your responses. That completes the examination. Please hang up now to submit your exam for grading."
+- After the question is answered (with ANY response), you MUST end immediately
+- Say: "Thank you for your response. That completes the examination. Please hang up now to submit your exam for grading."
 - Then STOP TALKING - do not respond to anything else
 
-You must ask each question exactly once, accept any answer, and move to the next question. No probing allowed."""
+You must ask the question exactly once, accept any answer, and end immediately. No probing allowed."""
 
         try:
             # Get webhook URL from environment
