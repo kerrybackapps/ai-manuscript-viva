@@ -40,7 +40,7 @@ class GradingCouncil:
             raise ImportError("google-generativeai package not installed. Run: pip install google-generativeai")
 
         genai.configure(api_key=google_key)
-        self.gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        self.gemini_model = genai.GenerativeModel('gemini-3.0')
 
         # All three models are required
         self.available_models = ['claude', 'gpt', 'gemini']
@@ -115,7 +115,7 @@ Format your response as JSON:
         """Get grade from Claude"""
         try:
             response = self.claude_client.messages.create(
-                model="claude-sonnet-4-5-20250929",
+                model="claude-opus-4-5",
                 max_tokens=2000,
                 messages=[{"role": "user", "content": prompt}]
             )
@@ -134,7 +134,7 @@ Format your response as JSON:
         """Get grade from GPT"""
         try:
             response = self.openai_client.chat.completions.create(
-                model="o1",
+                model="gpt-5.2",
                 messages=[{"role": "user", "content": prompt}]
             )
             result = response.choices[0].message.content
