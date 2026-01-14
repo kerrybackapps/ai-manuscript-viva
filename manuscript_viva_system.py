@@ -77,7 +77,7 @@ class ManuscriptAnalyzer:
     def analyze_manuscript(self, manuscript_text: str, assignment_prompt: str) -> dict:
         """
         Analyze manuscript before oral exam
-        Identifies key claims, methodology, and generates exactly 1 specific question
+        Identifies key claims, methodology, and generates exactly 3 specific questions
         """
 
         analysis_prompt = f"""You are preparing an oral examination for a student's manuscript.
@@ -89,10 +89,10 @@ STUDENT'S MANUSCRIPT:
 {manuscript_text}
 
 YOUR TASK:
-Analyze this manuscript and generate EXACTLY 1 specific question for the oral examination.
+Analyze this manuscript and generate EXACTLY 3 specific questions for the oral examination.
 
-The question should:
-- Ask about their main argument or central thesis
+Each question should:
+- Ask about their main argument, methodology, or implications
 - Reference specific content from the manuscript
 - Be clear and concise
 - Test genuine understanding (not just recall)
@@ -106,7 +106,9 @@ Format as JSON:
     "evidence_quality": "assessment of evidence strength",
     "gaps": ["gap 1", "gap 2", ...],
     "exam_questions": [
-        {{"number": 1, "category": "CONTENT", "question": "..."}}
+        {{"number": 1, "category": "CONTENT", "question": "..."}},
+        {{"number": 2, "category": "METHODOLOGY", "question": "..."}},
+        {{"number": 3, "category": "IMPLICATIONS", "question": "..."}}
     ],
     "overall_impression": "brief assessment"
 }}
