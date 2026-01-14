@@ -80,8 +80,9 @@ def initialize_prompts():
         }
     ]
 
-    with db.Session() as session:
-        for prompt_info in prompts_to_initialize:
+    # Initialize each prompt in its own transaction to avoid conflicts
+    for prompt_info in prompts_to_initialize:
+        with db.Session() as session:
             try:
                 # Check if already exists
                 existing = session.execute(
@@ -134,19 +135,13 @@ Be professional and focused. Ask exactly 5 questions, no more, no less. You must
                 )
 
                 session.add(new_prompt)
-                session.flush()  # Flush to check for constraint violations
+                session.commit()  # Commit immediately after each prompt
                 print(f"[OK] Initialized {prompt_info['display_name']}")
 
             except Exception as e:
                 # Handle duplicate key or other errors gracefully
                 session.rollback()
                 print(f"[SKIP] {prompt_info['display_name']} - {str(e)[:100]}")
-
-        try:
-            session.commit()
-        except Exception as e:
-            session.rollback()
-            print(f"[WARNING] Commit failed: {str(e)[:100]}")
 
     print("\n[COMPLETE] Prompts initialized in database")
 
