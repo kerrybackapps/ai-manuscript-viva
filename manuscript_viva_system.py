@@ -506,42 +506,24 @@ Key Claims: {', '.join(analysis.get('key_claims', []))}
         </div>
     </div>
 
+    <div class="alert alert-warning">
+        <strong>⚠️ Important:</strong> Ensure your microphone is enabled in your browser settings before starting.
+    </div>
+
     <div class="card">
         <h2>📋 Examination Instructions</h2>
         <ol>
-            <li><strong>The AI examiner has read your entire manuscript</strong></li>
-            <li>The examiner will ask 10-12 questions testing your understanding</li>
-            <li>Questions will reference specific parts of your work</li>
-            <li>Answer thoughtfully and honestly</li>
+            <li>The AI examiner has read your entire manuscript</li>
+            <li>The examiner will ask 5 questions testing your understanding</li>
             <li>You may ask the examiner to repeat questions</li>
-            <li>The conversation is automatically transcribed</li>
-            <li>You'll receive separate grades for your manuscript and oral defense</li>
+            <li>To begin, click the <strong>"Start a call"</strong> button below</li>
+            <li>Then click the <strong>telephone icon</strong> to connect</li>
+            <li>The examiner will greet you and ask the first question</li>
         </ol>
-    </div>
-
-    <div class="alert alert-warning">
-        <strong>⚠️ Before Starting:</strong> Ensure your microphone is enabled in your browser settings.
-    </div>
-
-    <div class="alert alert-info">
-        <strong>💡 Exam Strategy:</strong> The examiner wants to understand your thinking process.
-        Take your time to think before answering. It's okay to say "let me think about that" or
-        ask for clarification.
     </div>
 
     <div class="widget-container">
         <h3>🎙️ Begin Oral Examination</h3>
-        <p style="color: #718096; margin-bottom: 16px;">
-            <strong>To start the exam:</strong>
-        </p>
-        <ol style="text-align: left; display: inline-block; margin-bottom: 24px; color: #4a5568;">
-            <li>Click the <strong>"Start a call"</strong> button below</li>
-            <li>Click the <strong>telephone icon</strong> to connect</li>
-            <li>Wait for "Listening..." to appear</li>
-            <li>The examiner will greet you and ask the first question</li>
-            <li>Speak clearly when answering</li>
-        </ol>
-
         <elevenlabs-convai agent-id="{agent_id}"></elevenlabs-convai>
         <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async></script>
     </div>
