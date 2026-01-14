@@ -351,8 +351,8 @@
                         <td>
                             <div class="action-buttons">
                                 <a href="/admin/exam/{{ session.id }}" class="btn btn-primary">View Details</a>
-                                <button onclick="showGradeOptions({{ session.id }})" class="btn btn-grade">Grade Now</button>
-                                <button onclick="deleteExam({{ session.id }}, '{{ session.student_name }}')" class="btn btn-danger">Delete</button>
+                                <button onclick="showGradeOptions({{ session.id | tojson }})" class="btn btn-grade">Grade Now</button>
+                                <button onclick="deleteExam({{ session.id | tojson }}, {{ session.student_name | tojson }})" class="btn btn-danger">Delete</button>
                             </div>
                         </td>
                     </tr>
