@@ -441,8 +441,10 @@
                 return;
             }
 
+            // Save sessionId before closing modal (which sets currentSessionId = null)
+            const sessionIdToGrade = currentSessionId;
             closeModelModal();
-            gradeExam(currentSessionId, selectedModels);
+            gradeExam(sessionIdToGrade, selectedModels);
         }
 
         async function gradeExam(sessionId, models) {
