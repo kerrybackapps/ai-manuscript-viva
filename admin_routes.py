@@ -245,35 +245,42 @@ def grade_exam_admin(session_id):
                             conversation = elevenlabs_client.conversational_ai.conversations.get(conversation_id=conversation_id)
                             print(f"[DEBUG] Conversation details type: {type(conversation)}")
 
-                            # Extract transcript with extensive debugging
+                            # Extract transcript - API uses 'transcript' field not 'messages'
                             transcript_lines = []
 
-                            # Try different ways to get messages
-                            messages = None
-                            if hasattr(conversation, 'messages'):
-                                messages = conversation.messages
-                                print(f"[DEBUG] Got messages from attribute, count: {len(messages) if messages else 0}")
-                            elif isinstance(conversation, dict) and 'messages' in conversation:
-                                messages = conversation['messages']
-                                print(f"[DEBUG] Got messages from dict, count: {len(messages) if messages else 0}")
+                            # Get transcript from conversation (list of transcript entries)
+                            transcript_entries = None
+                            if hasattr(conversation, 'transcript'):
+                                transcript_entries = conversation.transcript
+                                print(f"[DEBUG] Got transcript from attribute, count: {len(transcript_entries) if transcript_entries else 0}")
+                            elif isinstance(conversation, dict) and 'transcript' in conversation:
+                                transcript_entries = conversation['transcript']
+                                print(f"[DEBUG] Got transcript from dict, count: {len(transcript_entries) if transcript_entries else 0}")
+                            else:
+                                print(f"[DEBUG] No transcript field found, checking conversation structure...")
+                                if hasattr(conversation, '__dict__'):
+                                    print(f"[DEBUG] Conversation attributes: {list(conversation.__dict__.keys())}")
 
-                            if messages:
-                                for i, message in enumerate(messages):
-                                    print(f"[DEBUG] Message {i} type: {type(message)}")
+                            if transcript_entries:
+                                for i, entry in enumerate(transcript_entries):
+                                    print(f"[DEBUG] Transcript entry {i} type: {type(entry)}")
 
                                     role = None
                                     content = None
 
-                                    if hasattr(message, 'role'):
-                                        role = message.role
-                                        content = message.message if hasattr(message, 'message') else ''
-                                    elif isinstance(message, dict):
-                                        role = message.get('role')
-                                        content = message.get('message', '')
+                                    # According to ElevenLabs API docs, each entry has 'role' and 'message'
+                                    if hasattr(entry, 'role'):
+                                        role = entry.role
+                                        content = entry.message if hasattr(entry, 'message') else None
+                                    elif isinstance(entry, dict):
+                                        role = entry.get('role')
+                                        content = entry.get('message')
 
                                     if role and content:
                                         transcript_lines.append(f"{role.upper()}: {content}")
-                                        print(f"[DEBUG] Added message: {role} ({len(content)} chars)")
+                                        print(f"[DEBUG] Added entry: {role} ({len(content)} chars)")
+                                    else:
+                                        print(f"[DEBUG] Skipped entry {i}: role={role}, content={'<empty>' if not content else '<present>'}")
 
                             oral_transcript = "\n\n".join(transcript_lines)
                             print(f"[ADMIN GRADING] Successfully extracted transcript: {len(oral_transcript)} chars, {len(transcript_lines)} messages")
