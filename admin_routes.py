@@ -175,6 +175,21 @@ def delete_exam(session_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@admin_bp.route('/exam/<int:session_id>/grade', methods=['POST'])
+@admin_required
+def grade_exam_admin(session_id):
+    """Manually trigger grading for an exam session"""
+    try:
+        from demo_app import system
+        results = system.grade_manuscript_and_oral(session_id)
+        if results:
+            return jsonify({'success': True, 'message': 'Grading completed successfully'})
+        else:
+            return jsonify({'success': False, 'error': 'Grading failed'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @admin_bp.route('/prompts')
 @admin_required
 def prompts():
