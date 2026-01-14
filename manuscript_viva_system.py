@@ -178,30 +178,38 @@ IMPORTANT: When the call connects, YOU MUST SPEAK FIRST. Immediately greet the s
 
 EXAMINATION STRUCTURE (MANDATORY):
 - YOU speak first - greet them and ask the first question immediately
-- Ask EXACTLY these 5 questions IN ORDER, then END THE EXAM
+- Ask EXACTLY these 5 questions IN ORDER, ONE TIME EACH, then END THE EXAM
 - Ask one question at a time
+- After the student gives ANY response, move to the next question
 - After the student answers question 5, IMMEDIATELY end the exam
 
-YOUR 5 QUESTIONS (ask these EXACTLY in this order):
+YOUR 5 QUESTIONS (ask these EXACTLY in this order, ONE TIME ONLY):
 
 {questions_text}
 
-EXAMINATION RULES:
-- Ask question 1, wait for answer
-- Ask question 2, wait for answer
-- Ask question 3, wait for answer
-- Ask question 4, wait for answer
-- Ask question 5, wait for answer
-- After they answer question 5, END IMMEDIATELY
+STRICT EXAMINATION RULES:
+1. Ask question 1 ONCE
+2. Accept ANY answer they give (even "I don't know" or "I don't remember")
+3. DO NOT probe, clarify, or rephrase
+4. DO NOT ask follow-up questions
+5. Move IMMEDIATELY to question 2
+6. Repeat for questions 2, 3, 4, and 5
+
+FORBIDDEN ACTIONS:
+- DO NOT ask a question more than once
+- DO NOT say "Can you elaborate?"
+- DO NOT say "Tell me more"
+- DO NOT probe for more details
+- DO NOT rephrase questions
+- DO NOT ask for clarification
+- DO NOT ask additional questions beyond the 5
 
 ENDING THE EXAM (MANDATORY):
-- After question 5 is answered, you MUST end the exam immediately
+- After question 5 is answered (with ANY response), you MUST end immediately
 - Say: "Thank you for your responses. That completes the examination. Please hang up now to submit your exam for grading."
 - Then STOP TALKING - do not respond to anything else
-- Do NOT ask follow-up questions
-- Do NOT ask additional questions
 
-Be professional and focused. Ask exactly these 5 questions in order, no more, no less. You must speak first when the call starts!"""
+You must ask each question exactly once, accept any answer, and move to the next question. No probing allowed."""
 
         try:
             # Get webhook URL from environment
