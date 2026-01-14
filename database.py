@@ -2,10 +2,12 @@
 Database models and setup for the AI Exam System
 """
 import os
+import sqlite3
 from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Text, JSON, Boolean, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.exc import OperationalError
 
 Base = declarative_base()
 
@@ -177,10 +179,19 @@ class Database:
         self.engine = create_engine(f'sqlite:///{db_path}')
 
         # Try to create tables, but handle gracefully if they exist
+        # This can fail with "table already exists" when multiple workers start simultaneously
         try:
             Base.metadata.create_all(self.engine, checkfirst=True)
+        except (OperationalError, sqlite3.OperationalError) as e:
+            error_msg = str(e).lower()
+            if 'already exists' in error_msg:
+                print(f"[DATABASE] Tables already exist (normal with multiple workers)")
+            else:
+                print(f"[DATABASE] Operational error during table creation: {e}")
+                raise
         except Exception as e:
-            print(f"[DATABASE] Table creation warning (may be normal): {e}")
+            print(f"[DATABASE] Unexpected error during table creation: {e}")
+            # Don't raise - allow app to continue
 
         # Add missing columns to existing tables
         self._add_missing_columns()

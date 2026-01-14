@@ -188,9 +188,18 @@ def grade_exam_admin(session_id):
         from demo_app import system
         import os
 
-        # Get model_set from request JSON
+        # Get models list from request JSON
         data = request.get_json() or {}
-        model_set = data.get('model_set', '2')  # Default to full models
+        models = data.get('models', None)
+
+        # Validate models list
+        if not models:
+            # Default to fast models (Sonnet, GPT-4o, Gemini Flash)
+            models = ['claude-sonnet', 'gpt-4o', 'gemini-flash']
+        elif not isinstance(models, list):
+            return jsonify({'success': False, 'error': 'Models must be a list'}), 400
+        elif len(models) < 1 or len(models) > 3:
+            return jsonify({'success': False, 'error': 'Must select between 1 and 3 models'}), 400
 
         # Get exam session
         exam = db.get_exam_session(session_id)
@@ -253,8 +262,9 @@ def grade_exam_admin(session_id):
                 traceback.print_exc()
                 # Continue with grading even if transcript fetch fails
 
-        # Proceed with grading with selected model set
-        results = system.grade_manuscript_and_oral(session_id, model_set=model_set)
+        # Proceed with grading with selected models
+        print(f"[ADMIN GRADING] Starting grading with models: {', '.join(models)}")
+        results = system.grade_manuscript_and_oral(session_id, models=models)
         if results:
             return jsonify({'success': True, 'message': 'Grading completed successfully'})
         else:

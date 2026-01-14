@@ -167,7 +167,7 @@ Format your response as JSON:
             print(f"Gemini grading error ({model}): {e}")
             return {"error": str(e), "model": f"Gemini-{model}"}
 
-    def conduct_grading(self, transcript: str, rubric: str, deliberation_rounds: int = 1, model_set: str = '2') -> Dict:
+    def conduct_grading(self, transcript: str, rubric: str, deliberation_rounds: int = 1, models: list = None) -> Dict:
         """
         Conduct multi-model grading with deliberation
 
@@ -175,24 +175,20 @@ Format your response as JSON:
             transcript: The exam transcript to grade
             rubric: The grading rubric
             deliberation_rounds: Number of deliberation rounds (default 1)
-            model_set: '1' = Fast (Sonnet + GPT-4o), '2' = Full (Opus + GPT-5 + Gemini 3.0),
-                      '3' = Sonnet only, '4' = Gemini Flash only
+            models: List of model names to use (e.g., ['claude-sonnet', 'gpt-4o', 'gemini-flash'])
+                   If None, defaults to fast models
 
         Returns:
             Dictionary containing all grades and convergence metrics
         """
-        # Select models based on model_set
-        if model_set == '1':  # Fast
-            models_to_use = ['claude-sonnet', 'gpt-4o']
-        elif model_set == '3':  # Sonnet only
-            models_to_use = ['claude-sonnet']
-        elif model_set == '4':  # Gemini Flash only
-            models_to_use = ['gemini-flash']
-        else:  # '2' or default - Full
-            models_to_use = self.available_models
+        # Select models
+        if models is None:
+            models_to_use = ['claude-sonnet', 'gpt-4o', 'gemini-flash']
+        else:
+            models_to_use = models
 
         print("\n" + "="*60)
-        print(f"GRADING COUNCIL SESSION (Model Set: {model_set})")
+        print(f"GRADING COUNCIL SESSION")
         print(f"Models to use: {', '.join(models_to_use)}")
         print("="*60 + "\n")
 
