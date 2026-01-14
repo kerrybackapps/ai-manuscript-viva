@@ -142,6 +142,23 @@
         .btn-danger:hover {
             background: #c53030;
         }
+        .btn-grade {
+            background: #48bb78;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: transform 0.2s;
+        }
+        .btn-grade:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        .btn-grade:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
         .action-buttons {
             display: flex;
             gap: 10px;
@@ -216,6 +233,7 @@
                         <td>
                             <div class="action-buttons">
                                 <a href="/admin/exam/{{ session.id }}" class="btn btn-primary">View Details</a>
+                                <button onclick="gradeExam({{ session.id }})" class="btn btn-grade">Grade Now</button>
                                 <button onclick="deleteExam({{ session.id }}, '{{ session.student_name }}')" class="btn btn-danger">Delete</button>
                             </div>
                         </td>
@@ -233,6 +251,52 @@
     </div>
 
     <script>
+        async function gradeExam(sessionId) {
+            const btn = event.target;
+
+            if (!confirm('Start grading for this exam?\n\nThis will grade both the manuscript and oral examination using Claude Opus 4.5, GPT-5.2, and Gemini 3.0. This process may take 1-2 minutes.')) {
+                return;
+            }
+
+            // Disable button and show loading state
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = '⏳ Grading...';
+
+            try {
+                const response = await fetch(`/admin/exam/${sessionId}/grade`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    btn.textContent = '✅ Complete!';
+                    // Refresh the page to show new grades
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    btn.textContent = '❌ Failed';
+                    alert(`Grading failed: ${data.error}`);
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }, 3000);
+                }
+            } catch (error) {
+                btn.textContent = '❌ Error';
+                alert(`Error: ${error.message}`);
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }, 3000);
+            }
+        }
+
         async function deleteExam(sessionId, studentName) {
             if (!confirm(`Are you sure you want to delete the exam for ${studentName}?\n\nThis will permanently delete:\n- The exam session\n- All grading results\n- All associated data\n\nThis action cannot be undone.`)) {
                 return;
