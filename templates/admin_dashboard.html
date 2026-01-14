@@ -142,26 +142,65 @@
         .btn-danger:hover {
             background: #c53030;
         }
-        .btn-grade {
+        .btn-transcript {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: transform 0.2s;
+        }
+        .btn-transcript:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        .btn-transcript:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+        .btn-grade-manuscript {
             background: #48bb78;
             color: white;
             border: none;
             cursor: pointer;
-            padding: 8px 16px;
+            padding: 6px 12px;
             border-radius: 6px;
+            font-size: 13px;
             transition: transform 0.2s;
         }
-        .btn-grade:hover {
+        .btn-grade-manuscript:hover {
             background: #38a169;
             transform: translateY(-2px);
         }
-        .btn-grade:disabled {
+        .btn-grade-manuscript:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+        .btn-grade-oral {
+            background: #ed8936;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: transform 0.2s;
+        }
+        .btn-grade-oral:hover {
+            background: #dd6b20;
+            transform: translateY(-2px);
+        }
+        .btn-grade-oral:disabled {
             background: #a0aec0;
             cursor: not-allowed;
         }
         .action-buttons {
             display: flex;
-            gap: 10px;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
         }
         /* Modal styles */
         .modal {
@@ -350,9 +389,11 @@
                         <td>{{ session.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                         <td>
                             <div class="action-buttons">
-                                <a href="/admin/exam/{{ session.id }}" class="btn btn-primary">View Details</a>
-                                <button onclick="showGradeOptions({{ session.id | tojson }})" class="btn btn-grade">Grade Now</button>
-                                <button onclick="deleteExam({{ session.id | tojson }}, {{ session.student_name | tojson }})" class="btn btn-danger">Delete</button>
+                                <a href="/admin/exam/{{ session.id }}" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px;">View</a>
+                                <button onclick="getTranscript({{ session.id | tojson }})" class="btn-transcript" id="transcript-btn-{{ session.id }}">📝 Transcript</button>
+                                <button onclick="showManuscriptGradeOptions({{ session.id | tojson }})" class="btn-grade-manuscript" id="manuscript-btn-{{ session.id }}">📄 Grade MS</button>
+                                <button onclick="showOralGradeOptions({{ session.id | tojson }})" class="btn-grade-oral" id="oral-btn-{{ session.id }}" {% if not session.oral_transcript %}disabled{% endif %}>🎤 Grade Oral</button>
+                                <button onclick="deleteExam({{ session.id | tojson }}, {{ session.student_name | tojson }})" class="btn btn-danger" style="padding: 6px 12px; font-size: 13px;">Delete</button>
                             </div>
                         </td>
                     </tr>
@@ -368,52 +409,102 @@
         </div>
     </div>
 
-    <!-- Model Selection Modal -->
-    <div id="modelModal" class="modal">
+    <!-- Manuscript Grading Modal -->
+    <div id="manuscriptModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Select Grading Models (1-3)</h3>
-                <span class="modal-close" onclick="closeModelModal()">&times;</span>
+                <h3>Grade Manuscript - Select Models (1-3)</h3>
+                <span class="modal-close" onclick="closeManuscriptModal()">&times;</span>
             </div>
             <div class="modal-body">
-                <p style="margin-bottom: 16px; color: #4a5568;">Choose between 1 and 3 models to grade this exam:</p>
+                <p style="margin-bottom: 16px; color: #4a5568;">Choose between 1 and 3 models to grade the manuscript:</p>
                 <div class="model-options">
                     <label class="model-checkbox">
-                        <input type="checkbox" value="claude" data-speed="~60s">
+                        <input type="checkbox" value="claude" data-speed="~60s" class="manuscript-model">
                         <span class="model-name">Claude Opus 4.5</span>
                         <span class="model-speed">~60s</span>
                     </label>
                     <label class="model-checkbox">
-                        <input type="checkbox" value="claude-sonnet" data-speed="~15s" checked>
+                        <input type="checkbox" value="claude-sonnet" data-speed="~15s" class="manuscript-model" checked>
                         <span class="model-name">Claude Sonnet 4.5 (Fast)</span>
                         <span class="model-speed">~15s</span>
                     </label>
                     <label class="model-checkbox">
-                        <input type="checkbox" value="gpt" data-speed="~30s">
+                        <input type="checkbox" value="gpt" data-speed="~30s" class="manuscript-model">
                         <span class="model-name">GPT-5.2</span>
                         <span class="model-speed">~30s</span>
                     </label>
                     <label class="model-checkbox">
-                        <input type="checkbox" value="gpt-4o" data-speed="~15s" checked>
+                        <input type="checkbox" value="gpt-4o" data-speed="~15s" class="manuscript-model" checked>
                         <span class="model-name">GPT-4o (Fast)</span>
                         <span class="model-speed">~15s</span>
                     </label>
                     <label class="model-checkbox">
-                        <input type="checkbox" value="gemini" data-speed="~25s">
+                        <input type="checkbox" value="gemini" data-speed="~25s" class="manuscript-model">
                         <span class="model-name">Gemini 3.0</span>
                         <span class="model-speed">~25s</span>
                     </label>
                     <label class="model-checkbox">
-                        <input type="checkbox" value="gemini-flash" data-speed="~10s" checked>
+                        <input type="checkbox" value="gemini-flash" data-speed="~10s" class="manuscript-model" checked>
                         <span class="model-name">Gemini 2.5 Flash (Fast)</span>
                         <span class="model-speed">~10s</span>
                     </label>
                 </div>
-                <div id="modelError" class="model-error"></div>
+                <div id="manuscriptError" class="model-error"></div>
             </div>
             <div class="modal-footer">
-                <button onclick="closeModelModal()" class="btn-cancel">Cancel</button>
-                <button onclick="submitModelSelection()" class="btn-submit">Start Grading</button>
+                <button onclick="closeManuscriptModal()" class="btn-cancel">Cancel</button>
+                <button onclick="submitManuscriptGrading()" class="btn-submit">Grade Manuscript</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Oral Exam Grading Modal -->
+    <div id="oralModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Grade Oral Exam - Select Models (1-3)</h3>
+                <span class="modal-close" onclick="closeOralModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: #4a5568;">Choose between 1 and 3 models to grade the oral exam:</p>
+                <div class="model-options">
+                    <label class="model-checkbox">
+                        <input type="checkbox" value="claude" data-speed="~60s" class="oral-model">
+                        <span class="model-name">Claude Opus 4.5</span>
+                        <span class="model-speed">~60s</span>
+                    </label>
+                    <label class="model-checkbox">
+                        <input type="checkbox" value="claude-sonnet" data-speed="~15s" class="oral-model" checked>
+                        <span class="model-name">Claude Sonnet 4.5 (Fast)</span>
+                        <span class="model-speed">~15s</span>
+                    </label>
+                    <label class="model-checkbox">
+                        <input type="checkbox" value="gpt" data-speed="~30s" class="oral-model">
+                        <span class="model-name">GPT-5.2</span>
+                        <span class="model-speed">~30s</span>
+                    </label>
+                    <label class="model-checkbox">
+                        <input type="checkbox" value="gpt-4o" data-speed="~15s" class="oral-model" checked>
+                        <span class="model-name">GPT-4o (Fast)</span>
+                        <span class="model-speed">~15s</span>
+                    </label>
+                    <label class="model-checkbox">
+                        <input type="checkbox" value="gemini" data-speed="~25s" class="oral-model">
+                        <span class="model-name">Gemini 3.0</span>
+                        <span class="model-speed">~25s</span>
+                    </label>
+                    <label class="model-checkbox">
+                        <input type="checkbox" value="gemini-flash" data-speed="~10s" class="oral-model" checked>
+                        <span class="model-name">Gemini 2.5 Flash (Fast)</span>
+                        <span class="model-speed">~10s</span>
+                    </label>
+                </div>
+                <div id="oralError" class="model-error"></div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeOralModal()" class="btn-cancel">Cancel</button>
+                <button onclick="submitOralGrading()" class="btn-submit">Grade Oral Exam</button>
             </div>
         </div>
     </div>
@@ -421,108 +512,193 @@
     <script>
         let currentSessionId = null;
 
-        function showGradeOptions(sessionId) {
-            currentSessionId = sessionId;
-            document.getElementById('modelModal').style.display = 'flex';
-            document.getElementById('modelError').textContent = '';
+        // === TRANSCRIPT FUNCTIONS ===
+        async function getTranscript(sessionId) {
+            const btn = document.getElementById(`transcript-btn-${sessionId}`);
+            const oralBtn = document.getElementById(`oral-btn-${sessionId}`);
+
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '⏳ Getting...';
+            }
+
+            try {
+                const response = await fetch(`/admin/exam/${sessionId}/transcript`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (btn) btn.textContent = '✅ Retrieved';
+                    if (oralBtn) oralBtn.disabled = false;  // Enable oral grading button
+                    setTimeout(() => {
+                        if (btn) btn.textContent = '📝 Transcript';
+                        if (btn) btn.disabled = false;
+                    }, 2000);
+                } else {
+                    if (btn) btn.textContent = '❌ Failed';
+                    alert(`Failed to retrieve transcript: ${data.error || 'Unknown error'}`);
+                    setTimeout(() => {
+                        if (btn) btn.textContent = '📝 Transcript';
+                        if (btn) btn.disabled = false;
+                    }, 3000);
+                }
+            } catch (error) {
+                if (btn) btn.textContent = '❌ Error';
+                alert(`Error: ${error.message}`);
+                setTimeout(() => {
+                    if (btn) btn.textContent = '📝 Transcript';
+                    if (btn) btn.disabled = false;
+                }, 3000);
+            }
         }
 
-        function closeModelModal() {
-            document.getElementById('modelModal').style.display = 'none';
+        // === MANUSCRIPT GRADING FUNCTIONS ===
+        function showManuscriptGradeOptions(sessionId) {
+            currentSessionId = sessionId;
+            document.getElementById('manuscriptModal').style.display = 'flex';
+            document.getElementById('manuscriptError').textContent = '';
+        }
+
+        function closeManuscriptModal() {
+            document.getElementById('manuscriptModal').style.display = 'none';
             currentSessionId = null;
         }
 
-        function submitModelSelection() {
-            const checkboxes = document.querySelectorAll('.model-checkbox input[type="checkbox"]:checked');
+        function submitManuscriptGrading() {
+            const checkboxes = document.querySelectorAll('.manuscript-model:checked');
             const selectedModels = Array.from(checkboxes).map(cb => cb.value);
 
             if (selectedModels.length < 1 || selectedModels.length > 3) {
-                document.getElementById('modelError').textContent = 'Please select between 1 and 3 models';
+                document.getElementById('manuscriptError').textContent = 'Please select between 1 and 3 models';
                 return;
             }
 
-            // Save sessionId before closing modal (which sets currentSessionId = null)
             const sessionIdToGrade = currentSessionId;
-            closeModelModal();
-            gradeExam(sessionIdToGrade, selectedModels);
+            closeManuscriptModal();
+            gradeManuscript(sessionIdToGrade, selectedModels);
         }
 
-        async function gradeExam(sessionId, models) {
-            // Find the grade button for this session
-            const row = document.getElementById(`exam-row-${sessionId}`);
-            const btn = row ? row.querySelector('.btn-grade') : null;
+        async function gradeManuscript(sessionId, models) {
+            const btn = document.getElementById(`manuscript-btn-${sessionId}`);
 
             if (btn) {
-                // Disable button and show loading state
                 btn.disabled = true;
                 btn.textContent = '⏳ Grading...';
             }
 
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minute timeout
-
-                const response = await fetch(`/admin/exam/${sessionId}/grade`, {
+                const response = await fetch(`/admin/exam/${sessionId}/grade-manuscript`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ models: models }),
-                    signal: controller.signal
+                    body: JSON.stringify({ models: models })
                 });
-
-                clearTimeout(timeoutId);
-
-                if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
-                }
 
                 const data = await response.json();
 
                 if (data.success) {
-                    if (btn) {
-                        btn.textContent = '✅ Complete!';
-                    }
-                    // Refresh the page to show new grades
+                    if (btn) btn.textContent = '✅ Done';
                     setTimeout(() => {
                         window.location.reload();
                     }, 1000);
                 } else {
-                    if (btn) {
-                        btn.textContent = '❌ Failed';
-                    }
+                    if (btn) btn.textContent = '❌ Failed';
                     alert(`Grading failed: ${data.error || 'Unknown error'}`);
                     setTimeout(() => {
                         if (btn) {
                             btn.disabled = false;
-                            btn.textContent = 'Grade Now';
+                            btn.textContent = '📄 Grade MS';
                         }
                     }, 3000);
                 }
             } catch (error) {
-                if (btn) {
-                    btn.textContent = '❌ Timeout';
-                }
-                let errorMsg = '';
-
-                if (error.name === 'AbortError') {
-                    errorMsg = 'Grading timed out after 3 minutes. The grading may still be processing in the background. Please refresh in a minute to check if grades appeared.';
-                } else if (error.message.includes('Failed to fetch')) {
-                    errorMsg = 'Network error or server timeout. The grading may still be processing. Please refresh in a minute to check if grades appeared.';
-                } else {
-                    errorMsg = `Error: ${error.message}`;
-                }
-
-                alert(errorMsg);
+                if (btn) btn.textContent = '❌ Error';
+                alert(`Error: ${error.message}`);
                 setTimeout(() => {
                     if (btn) {
                         btn.disabled = false;
-                        btn.textContent = 'Grade Now';
+                        btn.textContent = '📄 Grade MS';
                     }
-                }, 5000);
+                }, 3000);
             }
         }
 
+        // === ORAL EXAM GRADING FUNCTIONS ===
+        function showOralGradeOptions(sessionId) {
+            currentSessionId = sessionId;
+            document.getElementById('oralModal').style.display = 'flex';
+            document.getElementById('oralError').textContent = '';
+        }
+
+        function closeOralModal() {
+            document.getElementById('oralModal').style.display = 'none';
+            currentSessionId = null;
+        }
+
+        function submitOralGrading() {
+            const checkboxes = document.querySelectorAll('.oral-model:checked');
+            const selectedModels = Array.from(checkboxes).map(cb => cb.value);
+
+            if (selectedModels.length < 1 || selectedModels.length > 3) {
+                document.getElementById('oralError').textContent = 'Please select between 1 and 3 models';
+                return;
+            }
+
+            const sessionIdToGrade = currentSessionId;
+            closeOralModal();
+            gradeOral(sessionIdToGrade, selectedModels);
+        }
+
+        async function gradeOral(sessionId, models) {
+            const btn = document.getElementById(`oral-btn-${sessionId}`);
+
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '⏳ Grading...';
+            }
+
+            try {
+                const response = await fetch(`/admin/exam/${sessionId}/grade-oral`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ models: models })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (btn) btn.textContent = '✅ Done';
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    if (btn) btn.textContent = '❌ Failed';
+                    alert(`Grading failed: ${data.error || 'Unknown error'}`);
+                    setTimeout(() => {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.textContent = '🎤 Grade Oral';
+                        }
+                    }, 3000);
+                }
+            } catch (error) {
+                if (btn) btn.textContent = '❌ Error';
+                alert(`Error: ${error.message}`);
+                setTimeout(() => {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = '🎤 Grade Oral';
+                    }
+                }, 3000);
+            }
+        }
+
+        // === DELETE FUNCTION ===
         async function deleteExam(sessionId, studentName) {
             if (!confirm(`Are you sure you want to delete the exam for ${studentName}?\n\nThis will permanently delete:\n- The exam session\n- All grading results\n- All associated data\n\nThis action cannot be undone.`)) {
                 return;
@@ -539,13 +715,11 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // Remove the row from the table
                     const row = document.getElementById(`exam-row-${sessionId}`);
                     if (row) {
                         row.remove();
                     }
 
-                    // Refresh the page to update statistics
                     setTimeout(() => {
                         window.location.reload();
                     }, 500);
