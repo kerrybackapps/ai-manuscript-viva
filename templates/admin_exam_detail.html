@@ -281,7 +281,7 @@
     </div>
 
     <script>
-        const sessionId = {{ session_id }};
+        const sessionId = {{ session_id | tojson }};
 
         async function loadExamDetails() {
             try {
@@ -393,7 +393,8 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({ models: ['claude-sonnet', 'gpt-4o', 'gemini-flash'] })
                 });
 
                 const data = await response.json();
