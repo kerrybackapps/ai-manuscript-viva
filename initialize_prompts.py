@@ -12,7 +12,7 @@ def initialize_settings():
     default_settings = [
         {
             'key': 'assignment',
-            'value': 'Write a research paper on a technical topic of your choice. The paper should demonstrate your understanding of the subject, include proper citations, and present a clear argument or analysis.',
+            'value': 'Write a 10-15 page paper comparing and contrasting political developments of the past ten years to either Ayn Rand\'s Atlas Shrugged or George Orwell\'s 1984.',
             'description': 'Assignment description shown on the upload page'
         }
     ]

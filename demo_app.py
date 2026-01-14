@@ -52,7 +52,7 @@ def allowed_file(filename):
 def index():
     """Upload manuscript page"""
     # Fetch assignment from database
-    assignment = "Write a research paper on a technical topic of your choice."  # Default fallback
+    assignment = "Write a 10-15 page paper comparing and contrasting political developments of the past ten years to either Ayn Rand's Atlas Shrugged or George Orwell's 1984."  # Default fallback
     with db.Session() as session:
         setting = session.execute(
             select(Setting).where(Setting.key == 'assignment')
@@ -68,7 +68,7 @@ def upload():
     """Upload manuscript and create exam session"""
     if request.method == 'GET':
         # Fetch assignment from database
-        assignment = "Write a research paper on a technical topic of your choice."  # Default fallback
+        assignment = "Write a 10-15 page paper comparing and contrasting political developments of the past ten years to either Ayn Rand's Atlas Shrugged or George Orwell's 1984."  # Default fallback
         with db.Session() as session:
             setting = session.execute(
                 select(Setting).where(Setting.key == 'assignment')
@@ -92,7 +92,7 @@ def upload():
     student_name = request.form.get('student_name', 'Demo User')
 
     # Get assignment from database
-    assignment = "Research paper on a technical topic"  # Default fallback
+    assignment = "Write a 10-15 page paper comparing and contrasting political developments of the past ten years to either Ayn Rand's Atlas Shrugged or George Orwell's 1984."  # Default fallback
     with db.Session() as session:
         setting = session.execute(
             select(Setting).where(Setting.key == 'assignment')
