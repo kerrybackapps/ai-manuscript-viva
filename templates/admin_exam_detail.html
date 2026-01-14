@@ -157,23 +157,6 @@
         .btn-back:hover {
             background: rgba(255,255,255,0.3);
         }
-        .btn-grade {
-            color: white;
-            padding: 10px 20px;
-            border-radius: 6px;
-            background: #48bb78;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .btn-grade:hover {
-            background: #38a169;
-        }
-        .btn-grade:disabled {
-            background: #a0aec0;
-            cursor: not-allowed;
-        }
         .loading {
             text-align: center;
             padding: 40px;
@@ -196,10 +179,7 @@
     <div class="header">
         <div class="header-content">
             <h1>📋 Exam Details</h1>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <button onclick="gradeExam()" class="btn-grade" id="grade-btn">🎓 Grade Now</button>
-                <a href="/admin/dashboard" class="btn-back">← Back to Dashboard</a>
-            </div>
+            <a href="/admin/dashboard" class="btn-back">← Back to Dashboard</a>
         </div>
     </div>
 
@@ -375,62 +355,6 @@
                     <div class="assessment">${result.assessment || 'No assessment available'}</div>
                 </div>
             `;
-        }
-
-        async function gradeExam() {
-            const btn = document.getElementById('grade-btn');
-
-            if (!confirm('Start grading for this exam?\n\nThis will grade both the manuscript and oral examination using Claude Opus 4.5, GPT-5.2, and Gemini 3.0. This process may take 1-2 minutes.')) {
-                return;
-            }
-
-            // Disable button and show loading state
-            btn.disabled = true;
-            btn.textContent = '⏳ Grading in progress...';
-
-            try {
-                const response = await fetch(`/admin/exam/${sessionId}/grade`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ models: ['claude-sonnet', 'gpt-4o', 'gemini-flash'] })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    btn.textContent = '✅ Grading Complete!';
-                    btn.style.background = '#48bb78';
-
-                    // Reload the page to show new grades
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                } else {
-                    btn.textContent = '❌ Grading Failed';
-                    btn.style.background = '#e53e3e';
-                    alert(`Grading failed: ${data.error}`);
-
-                    // Re-enable button after error
-                    setTimeout(() => {
-                        btn.disabled = false;
-                        btn.textContent = '🎓 Grade Now';
-                        btn.style.background = '#48bb78';
-                    }, 3000);
-                }
-            } catch (error) {
-                btn.textContent = '❌ Error';
-                btn.style.background = '#e53e3e';
-                alert(`Error: ${error.message}`);
-
-                // Re-enable button after error
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.textContent = '🎓 Grade Now';
-                    btn.style.background = '#48bb78';
-                }, 3000);
-            }
         }
 
         loadExamDetails();
