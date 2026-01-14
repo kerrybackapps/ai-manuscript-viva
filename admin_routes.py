@@ -93,8 +93,8 @@ def dashboard():
                 'exam_type': exam.exam_type,
                 'created_at': utc_to_cst(exam.created_at),
                 'has_grades': len(results) > 0,
-                'manuscript_avg': sum(manuscript_scores) / len(manuscript_scores) if manuscript_scores else None,
-                'oral_avg': sum(oral_scores) / len(oral_scores) if oral_scores else None,
+                'manuscript_avg': sum(manuscript_scores) / len(manuscript_scores) if manuscript_scores else 0,
+                'oral_avg': sum(oral_scores) / len(oral_scores) if oral_scores else 0,
                 'grader_count': len(results)
             })
 
@@ -205,31 +205,48 @@ def grade_exam_admin(session_id):
                 if conversations and len(conversations) > 0:
                     # Get the most recent conversation
                     latest_conversation = conversations[0]
-                    conversation_id = latest_conversation.conversation_id
 
-                    print(f"[ADMIN GRADING] Found conversation: {conversation_id}")
+                    # Handle different return types (object, dict, or tuple)
+                    if hasattr(latest_conversation, 'conversation_id'):
+                        conversation_id = latest_conversation.conversation_id
+                    elif isinstance(latest_conversation, dict):
+                        conversation_id = latest_conversation.get('conversation_id')
+                    elif isinstance(latest_conversation, (list, tuple)) and len(latest_conversation) > 0:
+                        conversation_id = latest_conversation[0] if isinstance(latest_conversation[0], str) else None
+                    else:
+                        conversation_id = None
 
-                    # Get conversation details
-                    conversation = elevenlabs_client.conversational_ai.conversations.get(conversation_id=conversation_id)
+                    if not conversation_id:
+                        print(f"[ADMIN GRADING] Could not extract conversation_id from: {type(latest_conversation)}")
+                    else:
+                        print(f"[ADMIN GRADING] Found conversation: {conversation_id}")
 
-                    # Extract transcript
-                    transcript_lines = []
-                    if hasattr(conversation, 'messages'):
-                        for message in conversation.messages:
-                            role = message.role if hasattr(message, 'role') else 'unknown'
-                            content = message.message if hasattr(message, 'message') else ''
-                            transcript_lines.append(f"{role.upper()}: {content}")
+                        # Get conversation details
+                        conversation = elevenlabs_client.conversational_ai.conversations.get(conversation_id=conversation_id)
 
-                    oral_transcript = "\n\n".join(transcript_lines)
-                    print(f"[ADMIN GRADING] Extracted transcript: {len(oral_transcript)} chars")
+                        # Extract transcript
+                        transcript_lines = []
+                        if hasattr(conversation, 'messages'):
+                            for message in conversation.messages:
+                                role = message.role if hasattr(message, 'role') else 'unknown'
+                                content = message.message if hasattr(message, 'message') else ''
+                                transcript_lines.append(f"{role.upper()}: {content}")
+                        elif isinstance(conversation, dict) and 'messages' in conversation:
+                            for message in conversation['messages']:
+                                role = message.get('role', 'unknown')
+                                content = message.get('message', '')
+                                transcript_lines.append(f"{role.upper()}: {content}")
 
-                    # Update exam session with transcript
-                    db.update_exam_session(
-                        session_id,
-                        oral_transcript=oral_transcript,
-                        conversation_id=conversation_id,
-                        status='completed'
-                    )
+                        oral_transcript = "\n\n".join(transcript_lines)
+                        print(f"[ADMIN GRADING] Extracted transcript: {len(oral_transcript)} chars")
+
+                        # Update exam session with transcript
+                        db.update_exam_session(
+                            session_id,
+                            oral_transcript=oral_transcript,
+                            conversation_id=conversation_id,
+                            status='completed'
+                        )
                 else:
                     print("[ADMIN GRADING] No conversations found for this agent")
 
