@@ -171,7 +171,7 @@ class Database:
 
     def __init__(self, db_path='exam_system.db'):
         self.engine = create_engine(f'sqlite:///{db_path}')
-        Base.metadata.create_all(self.engine)
+        Base.metadata.create_all(self.engine, checkfirst=True)
         self.Session = scoped_session(sessionmaker(bind=self.engine))
 
     def get_session(self):
