@@ -111,11 +111,11 @@ Format your response as JSON:
 }}
 """
 
-    def grade_with_claude(self, prompt: str) -> Dict:
+    def grade_with_claude(self, prompt: str, model: str = "claude-opus-4-5") -> Dict:
         """Get grade from Claude"""
         try:
             response = self.claude_client.messages.create(
-                model="claude-opus-4-5",
+                model=model,
                 max_tokens=2000,
                 messages=[{"role": "user", "content": prompt}]
             )
@@ -127,14 +127,14 @@ Format your response as JSON:
                 result = result.split("```")[1].split("```")[0].strip()
             return json.loads(result)
         except Exception as e:
-            print(f"Claude grading error: {e}")
-            return {"error": str(e), "model": "Claude"}
+            print(f"Claude grading error ({model}): {e}")
+            return {"error": str(e), "model": f"Claude-{model}"}
 
-    def grade_with_gpt(self, prompt: str) -> Dict:
+    def grade_with_gpt(self, prompt: str, model: str = "chatgpt-4o-latest") -> Dict:
         """Get grade from GPT"""
         try:
             response = self.openai_client.chat.completions.create(
-                model="gpt-5.2",
+                model=model,
                 messages=[{"role": "user", "content": prompt}]
             )
             result = response.choices[0].message.content
@@ -145,8 +145,8 @@ Format your response as JSON:
                 result = result.split("```")[1].split("```")[0].strip()
             return json.loads(result)
         except Exception as e:
-            print(f"GPT grading error: {e}")
-            return {"error": str(e), "model": "GPT"}
+            print(f"GPT grading error ({model}): {e}")
+            return {"error": str(e), "model": f"GPT-{model}"}
 
     def grade_with_gemini(self, prompt: str) -> Dict:
         """Get grade from Gemini"""
@@ -163,7 +163,7 @@ Format your response as JSON:
             print(f"Gemini grading error: {e}")
             return {"error": str(e), "model": "Gemini"}
 
-    def conduct_grading(self, transcript: str, rubric: str, deliberation_rounds: int = 1) -> Dict:
+    def conduct_grading(self, transcript: str, rubric: str, deliberation_rounds: int = 1, model_set: str = '2') -> Dict:
         """
         Conduct multi-model grading with deliberation
 
@@ -171,18 +171,27 @@ Format your response as JSON:
             transcript: The exam transcript to grade
             rubric: The grading rubric
             deliberation_rounds: Number of deliberation rounds (default 1)
+            model_set: '1' = Fast (Sonnet + GPT-4o), '2' = Full (Opus + GPT-5 + Gemini), '3' = Sonnet only
 
         Returns:
             Dictionary containing all grades and convergence metrics
         """
+        # Select models based on model_set
+        if model_set == '1':  # Fast
+            models_to_use = ['claude-sonnet', 'gpt-4o']
+        elif model_set == '3':  # Sonnet only
+            models_to_use = ['claude-sonnet']
+        else:  # '2' or default - Full
+            models_to_use = self.available_models
+
         print("\n" + "="*60)
-        print("GRADING COUNCIL SESSION")
-        print(f"Available models: {', '.join(self.available_models)}")
+        print(f"GRADING COUNCIL SESSION (Model Set: {model_set})")
+        print(f"Models to use: {', '.join(models_to_use)}")
         print("="*60 + "\n")
 
-        if len(self.available_models) < 2:
-            print("ERROR: Need at least 2 models for grading council")
-            return {"error": "Insufficient models available"}
+        if len(models_to_use) < 1:
+            print("ERROR: Need at least 1 model for grading")
+            return {"error": "No models available"}
 
         # Round 1: Initial independent grading
         print("Round 1: Independent Grading...")
@@ -190,16 +199,24 @@ Format your response as JSON:
 
         round_1_grades = {}
 
-        if 'claude' in self.available_models:
-            print("  - Claude grading...")
-            round_1_grades['claude'] = self.grade_with_claude(initial_prompt)
+        if 'claude' in models_to_use:
+            print("  - Claude Opus 4.5 grading...")
+            round_1_grades['claude'] = self.grade_with_claude(initial_prompt, model='claude-opus-4-5')
 
-        if 'gpt' in self.available_models:
-            print("  - GPT grading...")
-            round_1_grades['gpt'] = self.grade_with_gpt(initial_prompt)
+        if 'claude-sonnet' in models_to_use:
+            print("  - Claude Sonnet 4.5 grading...")
+            round_1_grades['claude-sonnet'] = self.grade_with_claude(initial_prompt, model='claude-sonnet-4-5')
 
-        if 'gemini' in self.available_models:
-            print("  - Gemini grading...")
+        if 'gpt' in models_to_use:
+            print("  - GPT-5.2 grading...")
+            round_1_grades['gpt'] = self.grade_with_gpt(initial_prompt, model='chatgpt-4o-latest')
+
+        if 'gpt-4o' in models_to_use:
+            print("  - GPT-4o grading...")
+            round_1_grades['gpt-4o'] = self.grade_with_gpt(initial_prompt, model='gpt-4o')
+
+        if 'gemini' in models_to_use:
+            print("  - Gemini 3.0 grading...")
             round_1_grades['gemini'] = self.grade_with_gemini(initial_prompt)
 
         results = {
@@ -215,7 +232,7 @@ Format your response as JSON:
             current_round_grades = {}
 
             # Each model reviews others' grades
-            for model in self.available_models:
+            for model in models_to_use:
                 # Get other models' grades for this model to review
                 other_grades = {k: v for k, v in prev_round.items() if k != model}
 
@@ -226,9 +243,13 @@ Format your response as JSON:
                 print(f"  - {model.upper()} deliberating...")
 
                 if model == 'claude':
-                    current_round_grades['claude'] = self.grade_with_claude(deliberation_prompt)
+                    current_round_grades['claude'] = self.grade_with_claude(deliberation_prompt, model='claude-opus-4-5')
+                elif model == 'claude-sonnet':
+                    current_round_grades['claude-sonnet'] = self.grade_with_claude(deliberation_prompt, model='claude-sonnet-4-5')
                 elif model == 'gpt':
-                    current_round_grades['gpt'] = self.grade_with_gpt(deliberation_prompt)
+                    current_round_grades['gpt'] = self.grade_with_gpt(deliberation_prompt, model='chatgpt-4o-latest')
+                elif model == 'gpt-4o':
+                    current_round_grades['gpt-4o'] = self.grade_with_gpt(deliberation_prompt, model='gpt-4o')
                 elif model == 'gemini':
                     current_round_grades['gemini'] = self.grade_with_gemini(deliberation_prompt)
 

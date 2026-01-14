@@ -189,6 +189,10 @@ def grade_exam_admin(session_id):
         from elevenlabs.client import ElevenLabs
         import os
 
+        # Get model_set from request JSON
+        data = request.get_json() or {}
+        model_set = data.get('model_set', '2')  # Default to full models
+
         # Get exam session
         exam = db.get_exam_session(session_id)
         if not exam:
@@ -317,8 +321,8 @@ def grade_exam_admin(session_id):
                 print(f"[DEBUG] Outer traceback: {traceback.format_exc()}")
                 # Continue with grading even if transcript fetch fails
 
-        # Proceed with grading
-        results = system.grade_manuscript_and_oral(session_id)
+        # Proceed with grading with selected model set
+        results = system.grade_manuscript_and_oral(session_id, model_set=model_set)
         if results:
             return jsonify({'success': True, 'message': 'Grading completed successfully'})
         else:

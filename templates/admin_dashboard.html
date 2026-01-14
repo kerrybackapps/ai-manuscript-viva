@@ -233,7 +233,7 @@
                         <td>
                             <div class="action-buttons">
                                 <a href="/admin/exam/{{ session.id }}" class="btn btn-primary">View Details</a>
-                                <button onclick="gradeExam({{ session.id }})" class="btn btn-grade">Grade Now</button>
+                                <button onclick="showGradeOptions({{ session.id }})" class="btn btn-grade">Grade Now</button>
                                 <button onclick="deleteExam({{ session.id }}, '{{ session.student_name }}')" class="btn btn-danger">Delete</button>
                             </div>
                         </td>
@@ -251,12 +251,34 @@
     </div>
 
     <script>
-        async function gradeExam(sessionId) {
-            const btn = event.target;
+        function showGradeOptions(sessionId) {
+            const choice = prompt(
+                'Choose grading model set:\n\n' +
+                '1 - Fast (Sonnet 4.5 + GPT-4o - ~30 seconds)\n' +
+                '2 - Full (Opus 4.5 + GPT-5.2 + Gemini 3.0 - ~2 minutes)\n' +
+                '3 - Sonnet only (~15 seconds)\n\n' +
+                'Enter 1, 2, or 3:'
+            );
 
-            if (!confirm('Start grading for this exam?\n\nThis will grade both the manuscript and oral examination using Claude Opus 4.5, GPT-5.2, and Gemini 3.0. This process may take 1-2 minutes.')) {
+            if (!choice) return;
+
+            const modelSet = choice.trim();
+            if (!['1', '2', '3'].includes(modelSet)) {
+                alert('Invalid choice. Please enter 1, 2, or 3.');
                 return;
             }
+
+            gradeExam(sessionId, modelSet);
+        }
+
+        async function gradeExam(sessionId, modelSet) {
+            const btn = event.target;
+
+            const modelDescriptions = {
+                '1': 'Fast models',
+                '2': 'Full models',
+                '3': 'Sonnet only'
+            };
 
             // Disable button and show loading state
             btn.disabled = true;
@@ -264,12 +286,23 @@
             btn.textContent = '⏳ Grading...';
 
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minute timeout
+
                 const response = await fetch(`/admin/exam/${sessionId}/grade`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({ model_set: modelSet }),
+                    signal: controller.signal
                 });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
 
                 const data = await response.json();
 
@@ -281,19 +314,29 @@
                     }, 1000);
                 } else {
                     btn.textContent = '❌ Failed';
-                    alert(`Grading failed: ${data.error}`);
+                    alert(`Grading failed: ${data.error || 'Unknown error'}`);
                     setTimeout(() => {
                         btn.disabled = false;
                         btn.textContent = originalText;
                     }, 3000);
                 }
             } catch (error) {
-                btn.textContent = '❌ Error';
-                alert(`Error: ${error.message}`);
+                btn.textContent = '❌ Timeout';
+                let errorMsg = '';
+
+                if (error.name === 'AbortError') {
+                    errorMsg = 'Grading timed out after 3 minutes. The grading may still be processing in the background. Please refresh in a minute to check if grades appeared.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMsg = 'Network error or server timeout. The grading may still be processing. Please refresh in a minute to check if grades appeared.';
+                } else {
+                    errorMsg = `Error: ${error.message}`;
+                }
+
+                alert(errorMsg);
                 setTimeout(() => {
                     btn.disabled = false;
                     btn.textContent = originalText;
-                }, 3000);
+                }, 5000);
             }
         }
 

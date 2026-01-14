@@ -336,17 +336,19 @@ Key Claims: {', '.join(analysis.get('key_claims', []))}
             'manuscript_length': len(manuscript_text)
         }
 
-    def grade_manuscript_and_oral(self, session_id: int):
+    def grade_manuscript_and_oral(self, session_id: int, model_set: str = '2'):
         """
         Dual grading: manuscript and oral exam separately
 
         Returns separate scores for:
         - Part A: Manuscript (clarity, coherence, comprehensiveness)
         - Part B: Oral Exam (understanding, reasoning, alternatives)
+
+        model_set: '1' = Fast, '2' = Full, '3' = Sonnet only
         """
 
         print("\n" + "="*60)
-        print("DUAL GRADING SYSTEM")
+        print(f"DUAL GRADING SYSTEM (Model Set: {model_set})")
         print("="*60)
 
         # Get exam session
@@ -375,7 +377,8 @@ Key Claims: {', '.join(analysis.get('key_claims', []))}
         manuscript_results = self.council.conduct_grading(
             transcript=manuscript_prompt,
             rubric="",  # Rubric already in prompt
-            deliberation_rounds=1
+            deliberation_rounds=1,
+            model_set=model_set
         )
 
         # PART B: Grade oral exam
@@ -388,7 +391,8 @@ Key Claims: {', '.join(analysis.get('key_claims', []))}
             oral_results = self.council.conduct_grading(
                 transcript=oral_prompt,
                 rubric="",  # Rubric already in prompt
-                deliberation_rounds=1
+                deliberation_rounds=1,
+                model_set=model_set
             )
         else:
             print("  WARNING: No oral exam transcript found")
