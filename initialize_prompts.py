@@ -25,18 +25,19 @@ def initialize_settings():
             ).scalar_one_or_none()
 
             if existing:
-                print(f"[SKIP] Setting '{setting_info['key']}' already exists")
-                continue
-
-            # Create new setting
-            new_setting = Setting(
-                key=setting_info['key'],
-                value=setting_info['value'],
-                description=setting_info['description']
-            )
-
-            session.add(new_setting)
-            print(f"[OK] Initialized setting: {setting_info['key']}")
+                # UPDATE existing setting to match code default
+                existing.value = setting_info['value']
+                existing.description = setting_info.get('description', existing.description)
+                print(f"[UPDATE] Updated setting '{setting_info['key']}' to match code default")
+            else:
+                # Create new setting
+                new_setting = Setting(
+                    key=setting_info['key'],
+                    value=setting_info['value'],
+                    description=setting_info['description']
+                )
+                session.add(new_setting)
+                print(f"[OK] Initialized setting: {setting_info['key']}")
 
         session.commit()
 
