@@ -100,7 +100,8 @@ def dashboard():
                 'has_grades': len(results) > 0,
                 'manuscript_avg': sum(manuscript_scores) / len(manuscript_scores) if manuscript_scores else 0,
                 'oral_avg': sum(oral_scores) / len(oral_scores) if oral_scores else 0,
-                'grader_count': len(results)
+                'grader_count': len(results),
+                'oral_transcript': exam.oral_transcript  # For oral grading button state
             })
 
     return render_template('admin_dashboard.html', sessions=sessions_data)
@@ -400,6 +401,241 @@ def edit_setting(setting_key):
                          display_name=setting_key.replace('_', ' ').title(),
                          value=setting_data['value'],
                          description=setting_data.get('description', ''))
+
+
+@admin_bp.route('/exam/<int:session_id>/transcript', methods=['POST'])
+@admin_required
+def get_transcript_route(session_id):
+    """Retrieve transcript from ElevenLabs for this exam session"""
+    try:
+        import requests
+
+        # Get exam session
+        exam = db.get_exam_session(session_id)
+        if not exam:
+            return jsonify({'success': False, 'error': 'Exam session not found'}), 404
+
+        # Check if transcript already exists
+        if exam.get('oral_transcript'):
+            return jsonify({
+                'success': True,
+                'message': 'Transcript already exists',
+                'transcript_length': len(exam['oral_transcript'])
+            })
+
+        # Check if agent_id exists
+        if not exam.get('agent_id'):
+            return jsonify({'success': False, 'error': 'No agent_id found for this exam'}), 400
+
+        agent_id = exam['agent_id']
+        api_key = os.getenv('ELEVENLABS_API_KEY')
+        headers = {"xi-api-key": api_key}
+
+        print(f"[TRANSCRIPT] Fetching for session {session_id}, agent {agent_id}")
+
+        # List recent conversations for this agent
+        list_url = f"https://api.elevenlabs.io/v1/convai/conversations?agent_id={agent_id}"
+        list_response = requests.get(list_url, headers=headers)
+        list_response.raise_for_status()
+        conversations = list_response.json().get('conversations', [])
+
+        if not conversations:
+            return jsonify({'success': False, 'error': 'No conversations found for this agent'}), 404
+
+        # Get the most recent conversation
+        conversation_id = conversations[0].get('conversation_id')
+        print(f"[TRANSCRIPT] Found conversation {conversation_id}")
+
+        # Get conversation details with transcript
+        detail_url = f"https://api.elevenlabs.io/v1/convai/conversations/{conversation_id}"
+        detail_response = requests.get(detail_url, headers=headers)
+        detail_response.raise_for_status()
+        conversation_data = detail_response.json()
+
+        # Extract transcript
+        transcript = conversation_data.get('transcript', [])
+        transcript_lines = [
+            f"{entry.get('role', 'unknown').upper()}: {entry.get('message', '')}"
+            for entry in transcript
+            if entry.get('message')
+        ]
+
+        oral_transcript = "\n\n".join(transcript_lines)
+        print(f"[TRANSCRIPT] Extracted {len(oral_transcript)} chars, {len(transcript_lines)} messages")
+
+        if not oral_transcript:
+            return jsonify({'success': False, 'error': 'Transcript is empty'}), 400
+
+        # Update exam session with transcript
+        db.update_exam_session(
+            session_id,
+            oral_transcript=oral_transcript,
+            conversation_id=conversation_id,
+            status='completed'
+        )
+
+        return jsonify({
+            'success': True,
+            'message': 'Transcript retrieved successfully',
+            'transcript_length': len(oral_transcript),
+            'message_count': len(transcript_lines)
+        })
+
+    except Exception as e:
+        print(f"[TRANSCRIPT ERROR] {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@admin_bp.route('/exam/<int:session_id>/grade-manuscript', methods=['POST'])
+@admin_required
+def grade_manuscript_route(session_id):
+    """Grade manuscript only (separate from oral exam)"""
+    try:
+        from grading_council import GradingCouncil
+
+        # Get models list from request
+        data = request.get_json() or {}
+        models = data.get('models', ['claude-sonnet', 'gpt-4o', 'gemini-flash'])
+
+        # Validate models
+        if not isinstance(models, list) or len(models) < 1 or len(models) > 3:
+            return jsonify({'success': False, 'error': 'Must select between 1 and 3 models'}), 400
+
+        # Get exam session
+        exam = db.get_exam_session(session_id)
+        if not exam:
+            return jsonify({'success': False, 'error': 'Exam session not found'}), 404
+
+        manuscript_text = exam.get('manuscript_content') or ""
+        if not manuscript_text:
+            return jsonify({'success': False, 'error': 'No manuscript found'}), 400
+
+        print(f"[GRADE MANUSCRIPT] Session {session_id}, models: {', '.join(models)}")
+
+        # Load manuscript rubric
+        with open('rubric_manuscript.txt', 'r') as f:
+            manuscript_rubric = f.read()
+
+        manuscript_prompt = f"{manuscript_rubric}\n\nMANUSCRIPT TO EVALUATE:\n{manuscript_text}"
+
+        # Initialize grading council and grade
+        council = GradingCouncil()
+        manuscript_results = council.conduct_grading(
+            transcript=manuscript_prompt,
+            rubric="",
+            deliberation_rounds=1,
+            models=models
+        )
+
+        # Save manuscript grades to database
+        manuscript_saved = 0
+        for model, grade_data in manuscript_results['final_grades'].items():
+            if 'error' not in grade_data:
+                print(f"  Saving {model}_manuscript: score={grade_data.get('overall_score')}")
+                try:
+                    db.save_grading_result(
+                        session_id=session_id,
+                        model_name=f"{model}_manuscript",
+                        round_number=2,
+                        overall_score=grade_data.get('overall_score'),
+                        category_scores=grade_data.get('scores', {}),
+                        assessment=grade_data.get('overall_assessment', ''),
+                        cost=0.05
+                    )
+                    manuscript_saved += 1
+                except Exception as e:
+                    print(f"  Error saving {model}_manuscript: {e}")
+
+        print(f"[GRADE MANUSCRIPT] Saved {manuscript_saved} manuscript grades")
+
+        return jsonify({
+            'success': True,
+            'message': f'Manuscript grading completed ({manuscript_saved} models)',
+            'grades_saved': manuscript_saved
+        })
+
+    except Exception as e:
+        print(f"[GRADE MANUSCRIPT ERROR] {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@admin_bp.route('/exam/<int:session_id>/grade-oral', methods=['POST'])
+@admin_required
+def grade_oral_route(session_id):
+    """Grade oral exam only (separate from manuscript)"""
+    try:
+        from grading_council import GradingCouncil
+
+        # Get models list from request
+        data = request.get_json() or {}
+        models = data.get('models', ['claude-sonnet', 'gpt-4o', 'gemini-flash'])
+
+        # Validate models
+        if not isinstance(models, list) or len(models) < 1 or len(models) > 3:
+            return jsonify({'success': False, 'error': 'Must select between 1 and 3 models'}), 400
+
+        # Get exam session
+        exam = db.get_exam_session(session_id)
+        if not exam:
+            return jsonify({'success': False, 'error': 'Exam session not found'}), 404
+
+        oral_text = exam.get('oral_transcript') or ""
+        if not oral_text.strip():
+            return jsonify({'success': False, 'error': 'No oral transcript found. Retrieve transcript first.'}), 400
+
+        print(f"[GRADE ORAL] Session {session_id}, models: {', '.join(models)}")
+
+        # Load oral exam rubric
+        with open('rubric_oral_exam.txt', 'r') as f:
+            oral_rubric = f.read()
+
+        oral_prompt = f"{oral_rubric}\n\nORAL EXAM TRANSCRIPT:\n{oral_text}"
+
+        # Initialize grading council and grade
+        council = GradingCouncil()
+        oral_results = council.conduct_grading(
+            transcript=oral_prompt,
+            rubric="",
+            deliberation_rounds=1,
+            models=models
+        )
+
+        # Save oral exam grades to database
+        oral_saved = 0
+        for model, grade_data in oral_results['final_grades'].items():
+            if 'error' not in grade_data:
+                print(f"  Saving {model}_oral: score={grade_data.get('overall_score')}")
+                try:
+                    db.save_grading_result(
+                        session_id=session_id,
+                        model_name=f"{model}_oral",
+                        round_number=2,
+                        overall_score=grade_data.get('overall_score'),
+                        category_scores=grade_data.get('scores', {}),
+                        assessment=grade_data.get('overall_assessment', ''),
+                        cost=0.05
+                    )
+                    oral_saved += 1
+                except Exception as e:
+                    print(f"  Error saving {model}_oral: {e}")
+
+        print(f"[GRADE ORAL] Saved {oral_saved} oral grades")
+
+        return jsonify({
+            'success': True,
+            'message': f'Oral exam grading completed ({oral_saved} models)',
+            'grades_saved': oral_saved
+        })
+
+    except Exception as e:
+        print(f"[GRADE ORAL ERROR] {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @admin_bp.route('/test-transcript', methods=['GET'])
