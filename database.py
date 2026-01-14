@@ -3,7 +3,7 @@ Database models and setup for the AI Exam System
 """
 import os
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Text, JSON, Boolean
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Text, JSON, Boolean, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 
@@ -175,8 +175,46 @@ class Database:
 
     def __init__(self, db_path='exam_system.db'):
         self.engine = create_engine(f'sqlite:///{db_path}')
-        Base.metadata.create_all(self.engine, checkfirst=True)
+
+        # Try to create tables, but handle gracefully if they exist
+        try:
+            Base.metadata.create_all(self.engine, checkfirst=True)
+        except Exception as e:
+            print(f"[DATABASE] Table creation warning (may be normal): {e}")
+
+        # Add missing columns to existing tables
+        self._add_missing_columns()
+
         self.Session = scoped_session(sessionmaker(bind=self.engine))
+
+    def _add_missing_columns(self):
+        """Add any missing columns to existing tables"""
+        with self.engine.connect() as conn:
+            # Check and add agent_id column to exam_sessions if missing
+            try:
+                result = conn.execute(text("SELECT agent_id FROM exam_sessions LIMIT 1"))
+                result.close()
+            except Exception:
+                print("[DATABASE] Adding agent_id column to exam_sessions...")
+                try:
+                    conn.execute(text("ALTER TABLE exam_sessions ADD COLUMN agent_id VARCHAR(100)"))
+                    conn.commit()
+                    print("[DATABASE] Added agent_id column")
+                except Exception as e:
+                    print(f"[DATABASE] Could not add agent_id: {e}")
+
+            # Check and add conversation_id column to exam_sessions if missing
+            try:
+                result = conn.execute(text("SELECT conversation_id FROM exam_sessions LIMIT 1"))
+                result.close()
+            except Exception:
+                print("[DATABASE] Adding conversation_id column to exam_sessions...")
+                try:
+                    conn.execute(text("ALTER TABLE exam_sessions ADD COLUMN conversation_id VARCHAR(100)"))
+                    conn.commit()
+                    print("[DATABASE] Added conversation_id column")
+                except Exception as e:
+                    print(f"[DATABASE] Could not add conversation_id: {e}")
 
     def get_session(self):
         return self.Session()
