@@ -59,7 +59,7 @@ INSTRUCTIONS:
 Evaluate the student's performance based on the rubric. Provide:
 1. A score for each rubric category (scale provided in rubric)
 2. Brief justification for each score (2-3 sentences)
-3. Overall assessment of understanding
+3. Detailed overall assessment (1-2 paragraphs explaining your reasoning for these grades, including specific examples from the student's work)
 
 Format your response as JSON:
 {{
@@ -70,7 +70,7 @@ Format your response as JSON:
         }}
     }},
     "overall_score": X.X,
-    "overall_assessment": "Brief summary of student's performance"
+    "overall_assessment": "1-2 paragraphs with detailed reasoning and specific examples"
 }}
 
 Be fair but rigorous. Focus on demonstrated understanding, not presentation style.
@@ -107,7 +107,7 @@ Format your response as JSON:
         }}
     }},
     "overall_score": X.X,
-    "overall_assessment": "Final summary"
+    "overall_assessment": "1-2 paragraphs with final detailed assessment, including how deliberation affected your evaluation"
 }}
 """
 
