@@ -196,62 +196,122 @@ def grade_exam_admin(session_id):
             try:
                 elevenlabs_client = ElevenLabs(api_key=os.getenv('ELEVENLABS_API_KEY'))
 
-                # Get all conversations for this agent
-                conversations_response = elevenlabs_client.conversational_ai.conversations.list(agent_id=exam['agent_id'])
+                # DEBUG: Try to get conversations
+                print("[DEBUG] Attempting to list conversations...")
+                try:
+                    conversations_response = elevenlabs_client.conversational_ai.conversations.list(agent_id=exam['agent_id'])
+                    print(f"[DEBUG] Response type: {type(conversations_response)}")
 
-                # Convert response to list
-                conversations = list(conversations_response) if conversations_response else []
+                    # Try to get the first item to see structure
+                    conversations = list(conversations_response) if conversations_response else []
+                    print(f"[DEBUG] Number of conversations: {len(conversations)}")
 
-                if conversations and len(conversations) > 0:
-                    # Get the most recent conversation
-                    latest_conversation = conversations[0]
+                    if conversations:
+                        first_conv = conversations[0]
+                        print(f"[DEBUG] First conversation type: {type(first_conv)}")
+                        print(f"[DEBUG] First conversation value: {first_conv}")
 
-                    # Handle different return types (object, dict, or tuple)
-                    if hasattr(latest_conversation, 'conversation_id'):
-                        conversation_id = latest_conversation.conversation_id
-                    elif isinstance(latest_conversation, dict):
-                        conversation_id = latest_conversation.get('conversation_id')
-                    elif isinstance(latest_conversation, (list, tuple)) and len(latest_conversation) > 0:
-                        conversation_id = latest_conversation[0] if isinstance(latest_conversation[0], str) else None
-                    else:
+                        # If it's a tuple, check what's in it
+                        if isinstance(first_conv, tuple):
+                            print(f"[DEBUG] Tuple length: {len(first_conv)}")
+                            for i, item in enumerate(first_conv):
+                                print(f"[DEBUG] Tuple[{i}] type: {type(item)}, value: {item}")
+
+                        # Try different ways to extract conversation_id
                         conversation_id = None
 
-                    if not conversation_id:
-                        print(f"[ADMIN GRADING] Could not extract conversation_id from: {type(latest_conversation)}")
+                        # Method 1: Direct attribute
+                        if hasattr(first_conv, 'conversation_id'):
+                            conversation_id = first_conv.conversation_id
+                            print(f"[DEBUG] Got ID from attribute: {conversation_id}")
+
+                        # Method 2: Dict access
+                        elif isinstance(first_conv, dict):
+                            conversation_id = first_conv.get('conversation_id')
+                            print(f"[DEBUG] Got ID from dict: {conversation_id}")
+
+                        # Method 3: Tuple - conversation_id might be the tuple itself or first element
+                        elif isinstance(first_conv, tuple):
+                            # Try tuple itself as string
+                            if len(first_conv) == 1 and isinstance(first_conv[0], str):
+                                conversation_id = first_conv[0]
+                                print(f"[DEBUG] Got ID from tuple[0]: {conversation_id}")
+                            # Try direct conversion
+                            elif all(isinstance(item, str) for item in first_conv):
+                                conversation_id = ''.join(first_conv)
+                                print(f"[DEBUG] Got ID from tuple join: {conversation_id}")
+
+                        # Method 4: Direct string
+                        elif isinstance(first_conv, str):
+                            conversation_id = first_conv
+                            print(f"[DEBUG] Conversation IS the ID: {conversation_id}")
+
+                        if conversation_id:
+                            print(f"[ADMIN GRADING] Successfully extracted conversation_id: {conversation_id}")
+
+                            # Get conversation details
+                            print(f"[DEBUG] Fetching conversation details...")
+                            conversation = elevenlabs_client.conversational_ai.conversations.get(conversation_id=conversation_id)
+                            print(f"[DEBUG] Conversation details type: {type(conversation)}")
+
+                            # Extract transcript with extensive debugging
+                            transcript_lines = []
+
+                            # Try different ways to get messages
+                            messages = None
+                            if hasattr(conversation, 'messages'):
+                                messages = conversation.messages
+                                print(f"[DEBUG] Got messages from attribute, count: {len(messages) if messages else 0}")
+                            elif isinstance(conversation, dict) and 'messages' in conversation:
+                                messages = conversation['messages']
+                                print(f"[DEBUG] Got messages from dict, count: {len(messages) if messages else 0}")
+
+                            if messages:
+                                for i, message in enumerate(messages):
+                                    print(f"[DEBUG] Message {i} type: {type(message)}")
+
+                                    role = None
+                                    content = None
+
+                                    if hasattr(message, 'role'):
+                                        role = message.role
+                                        content = message.message if hasattr(message, 'message') else ''
+                                    elif isinstance(message, dict):
+                                        role = message.get('role')
+                                        content = message.get('message', '')
+
+                                    if role and content:
+                                        transcript_lines.append(f"{role.upper()}: {content}")
+                                        print(f"[DEBUG] Added message: {role} ({len(content)} chars)")
+
+                            oral_transcript = "\n\n".join(transcript_lines)
+                            print(f"[ADMIN GRADING] Successfully extracted transcript: {len(oral_transcript)} chars, {len(transcript_lines)} messages")
+
+                            if len(oral_transcript) > 0:
+                                # Update exam session with transcript
+                                db.update_exam_session(
+                                    session_id,
+                                    oral_transcript=oral_transcript,
+                                    conversation_id=conversation_id,
+                                    status='completed'
+                                )
+                                print(f"[ADMIN GRADING] Transcript saved to database")
+                            else:
+                                print(f"[ADMIN GRADING WARNING] Transcript is empty")
+                        else:
+                            print(f"[ADMIN GRADING ERROR] Could not extract conversation_id from response")
                     else:
-                        print(f"[ADMIN GRADING] Found conversation: {conversation_id}")
+                        print("[ADMIN GRADING] No conversations found for this agent")
 
-                        # Get conversation details
-                        conversation = elevenlabs_client.conversational_ai.conversations.get(conversation_id=conversation_id)
-
-                        # Extract transcript
-                        transcript_lines = []
-                        if hasattr(conversation, 'messages'):
-                            for message in conversation.messages:
-                                role = message.role if hasattr(message, 'role') else 'unknown'
-                                content = message.message if hasattr(message, 'message') else ''
-                                transcript_lines.append(f"{role.upper()}: {content}")
-                        elif isinstance(conversation, dict) and 'messages' in conversation:
-                            for message in conversation['messages']:
-                                role = message.get('role', 'unknown')
-                                content = message.get('message', '')
-                                transcript_lines.append(f"{role.upper()}: {content}")
-
-                        oral_transcript = "\n\n".join(transcript_lines)
-                        print(f"[ADMIN GRADING] Extracted transcript: {len(oral_transcript)} chars")
-
-                        # Update exam session with transcript
-                        db.update_exam_session(
-                            session_id,
-                            oral_transcript=oral_transcript,
-                            conversation_id=conversation_id,
-                            status='completed'
-                        )
-                else:
-                    print("[ADMIN GRADING] No conversations found for this agent")
+                except Exception as inner_e:
+                    print(f"[DEBUG ERROR] Exception during conversation fetch: {type(inner_e).__name__}: {inner_e}")
+                    import traceback
+                    print(f"[DEBUG] Traceback: {traceback.format_exc()}")
 
             except Exception as e:
                 print(f"[ADMIN GRADING ERROR] Failed to fetch transcript: {e}")
+                import traceback
+                print(f"[DEBUG] Outer traceback: {traceback.format_exc()}")
                 # Continue with grading even if transcript fetch fails
 
         # Proceed with grading
