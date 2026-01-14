@@ -97,16 +97,16 @@ def update_agent():
             conversation_config=config_dict
         )
 
-        print("\n✓ Agent updated successfully!")
+        print("\n[SUCCESS] Agent updated successfully!")
         print(f"  Agent ID: {AGENT_ID}")
         print("\nNew prompt preview:")
         print(NEW_PROMPT[:200] + "...")
         if webhook_url:
-            print(f"\n✓ Webhook configured: {webhook_url}")
+            print(f"\n[SUCCESS] Webhook configured: {webhook_url}")
             print("  Event: conversation.ended")
 
     except Exception as e:
-        print(f"\n✗ Error updating agent: {e}")
+        print(f"\n[ERROR] Error updating agent: {e}")
         print("\nIf this doesn't work, you may need to:")
         print("1. Go to https://elevenlabs.io/app/conversational-ai")
         print("2. Find your agent")
