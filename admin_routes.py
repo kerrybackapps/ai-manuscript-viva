@@ -35,6 +35,11 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not session.get('admin_logged_in'):
+            # Check if this is an AJAX/fetch request
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or \
+               request.headers.get('Content-Type') == 'application/json' or \
+               request.path.startswith('/admin/exam/') and request.method == 'POST':
+                return jsonify({'success': False, 'error': 'Not authenticated'}), 401
             return redirect(url_for('admin.admin_home'))
         return f(*args, **kwargs)
     return decorated_function
