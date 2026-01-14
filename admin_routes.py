@@ -6,6 +6,7 @@ from functools import wraps
 from database import Database, ExamSession, GradingResult, Student, Setting
 from sqlalchemy import select, desc
 import os
+from datetime import datetime, timedelta
 from admin_config import ADMIN_PASSWORD, PROMPTS_DIR
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -21,6 +22,13 @@ MODEL_DISPLAY_NAMES = {
 def get_model_display_name(model_key):
     """Convert model key to full display name"""
     return MODEL_DISPLAY_NAMES.get(model_key, model_key.upper())
+
+def utc_to_cst(utc_dt):
+    """Convert UTC datetime to CST (UTC-6)"""
+    if utc_dt is None:
+        return None
+    # CST is UTC-6
+    return utc_dt - timedelta(hours=6)
 
 def admin_required(f):
     """Decorator to require admin authentication"""
@@ -83,7 +91,7 @@ def dashboard():
                 'id': exam.id,
                 'student_name': exam.student_name,
                 'exam_type': exam.exam_type,
-                'created_at': exam.created_at,
+                'created_at': utc_to_cst(exam.created_at),
                 'has_grades': len(results) > 0,
                 'manuscript_avg': sum(manuscript_scores) / len(manuscript_scores) if manuscript_scores else None,
                 'oral_avg': sum(oral_scores) / len(oral_scores) if oral_scores else None,

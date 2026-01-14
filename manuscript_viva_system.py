@@ -370,31 +370,51 @@ Key Claims: {', '.join(analysis.get('key_claims', []))}
         print("\n[Saving Results to Database...]")
 
         # Save manuscript grades
+        manuscript_saved = 0
         for model, grade_data in manuscript_results['final_grades'].items():
             if 'error' not in grade_data:
-                self.db.save_grading_result(
-                    session_id=session_id,
-                    model_name=f"{model}_manuscript",
-                    round_number=2,  # After deliberation
-                    overall_score=grade_data.get('overall_score'),
-                    category_scores=grade_data.get('scores', {}),
-                    assessment=grade_data.get('overall_assessment', ''),
-                    cost=0.05  # Estimated
-                )
-
-        # Save oral exam grades
-        if oral_results:
-            for model, grade_data in oral_results['final_grades'].items():
-                if 'error' not in grade_data:
+                print(f"  Saving {model}_manuscript: score={grade_data.get('overall_score')}")
+                try:
                     self.db.save_grading_result(
                         session_id=session_id,
-                        model_name=f"{model}_oral",
-                        round_number=2,
+                        model_name=f"{model}_manuscript",
+                        round_number=2,  # After deliberation
                         overall_score=grade_data.get('overall_score'),
                         category_scores=grade_data.get('scores', {}),
                         assessment=grade_data.get('overall_assessment', ''),
-                        cost=0.05
+                        cost=0.05  # Estimated
                     )
+                    manuscript_saved += 1
+                    print(f"  ✓ Saved {model}_manuscript")
+                except Exception as e:
+                    print(f"  ✗ Error saving {model}_manuscript: {e}")
+            else:
+                print(f"  ✗ Skipping {model}_manuscript (has error): {grade_data.get('error')}")
+
+        # Save oral exam grades
+        oral_saved = 0
+        if oral_results:
+            for model, grade_data in oral_results['final_grades'].items():
+                if 'error' not in grade_data:
+                    print(f"  Saving {model}_oral: score={grade_data.get('overall_score')}")
+                    try:
+                        self.db.save_grading_result(
+                            session_id=session_id,
+                            model_name=f"{model}_oral",
+                            round_number=2,
+                            overall_score=grade_data.get('overall_score'),
+                            category_scores=grade_data.get('scores', {}),
+                            assessment=grade_data.get('overall_assessment', ''),
+                            cost=0.05
+                        )
+                        oral_saved += 1
+                        print(f"  ✓ Saved {model}_oral")
+                    except Exception as e:
+                        print(f"  ✗ Error saving {model}_oral: {e}")
+                else:
+                    print(f"  ✗ Skipping {model}_oral (has error): {grade_data.get('error')}")
+
+        print(f"\n[DATABASE] Saved {manuscript_saved} manuscript grades and {oral_saved} oral grades")
 
         # Mark session complete
         self.db.update_exam_session(session_id, status='completed')

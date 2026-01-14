@@ -203,11 +203,7 @@
                             <div class="info-value" id="student-id"></div>
                         </div>
                         <div class="info-item">
-                            <div class="info-label">Exam Type</div>
-                            <div class="info-value" id="exam-type"></div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Date</div>
+                            <div class="info-label">Date (CST)</div>
                             <div class="info-value" id="exam-date"></div>
                         </div>
                     </div>
@@ -285,8 +281,20 @@
             // Student info
             document.getElementById('student-name').textContent = data.student_name;
             document.getElementById('student-id').textContent = data.student_id;
-            document.getElementById('exam-type').textContent = data.exam_type;
-            document.getElementById('exam-date').textContent = new Date(data.created_at).toLocaleString();
+
+            // Convert to CST (UTC-6)
+            const utcDate = new Date(data.created_at);
+            const cstDate = new Date(utcDate.getTime() - (6 * 60 * 60 * 1000));
+            document.getElementById('exam-date').textContent = cstDate.toLocaleString('en-US', {
+                timeZone: 'America/Chicago',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
 
             // Manuscript grading
             if (data.manuscript_results.length > 0) {
