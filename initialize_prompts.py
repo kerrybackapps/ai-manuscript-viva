@@ -82,23 +82,24 @@ def initialize_prompts():
 
     with db.Session() as session:
         for prompt_info in prompts_to_initialize:
-            # Check if already exists
-            existing = session.execute(
-                select(Prompt).where(Prompt.name == prompt_info['name'])
-            ).scalar_one_or_none()
+            try:
+                # Check if already exists
+                existing = session.execute(
+                    select(Prompt).where(Prompt.name == prompt_info['name'])
+                ).scalar_one_or_none()
 
-            if existing:
-                print(f"[SKIP] {prompt_info['display_name']} already exists")
-                continue
+                if existing:
+                    print(f"[SKIP] {prompt_info['display_name']} already exists")
+                    continue
 
-            # Read content from file if it exists
-            content = ""
-            if prompt_info['file'] and os.path.exists(prompt_info['file']):
-                with open(prompt_info['file'], 'r', encoding='utf-8') as f:
-                    content = f.read()
-            elif prompt_info['name'] == 'examiner_agent':
-                # Default examiner agent prompt
-                content = """You are an oral examiner conducting a viva voce examination based on a student's submitted manuscript.
+                # Read content from file if it exists
+                content = ""
+                if prompt_info['file'] and os.path.exists(prompt_info['file']):
+                    with open(prompt_info['file'], 'r', encoding='utf-8') as f:
+                        content = f.read()
+                elif prompt_info['name'] == 'examiner_agent':
+                    # Default examiner agent prompt
+                    content = """You are an oral examiner conducting a viva voce examination based on a student's submitted manuscript.
 
 IMPORTANT: When the call connects, YOU MUST SPEAK FIRST. Immediately greet the student with: "Hello! I've read your manuscript carefully and I'm ready to begin your oral examination. Let's start with the first question."
 
@@ -122,20 +123,30 @@ ENDING THE EXAM (MANDATORY):
 
 Be professional and focused. Ask exactly 5 questions, no more, no less. You must speak first when the call starts!"""
 
-            # Create new prompt
-            new_prompt = Prompt(
-                name=prompt_info['name'],
-                display_name=prompt_info['display_name'],
-                description=prompt_info['description'],
-                content=content,
-                category=prompt_info['category'],
-                version=1
-            )
+                # Create new prompt
+                new_prompt = Prompt(
+                    name=prompt_info['name'],
+                    display_name=prompt_info['display_name'],
+                    description=prompt_info['description'],
+                    content=content,
+                    category=prompt_info['category'],
+                    version=1
+                )
 
-            session.add(new_prompt)
-            print(f"[OK] Initialized {prompt_info['display_name']}")
+                session.add(new_prompt)
+                session.flush()  # Flush to check for constraint violations
+                print(f"[OK] Initialized {prompt_info['display_name']}")
 
-        session.commit()
+            except Exception as e:
+                # Handle duplicate key or other errors gracefully
+                session.rollback()
+                print(f"[SKIP] {prompt_info['display_name']} - {str(e)[:100]}")
+
+        try:
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            print(f"[WARNING] Commit failed: {str(e)[:100]}")
 
     print("\n[COMPLETE] Prompts initialized in database")
 
