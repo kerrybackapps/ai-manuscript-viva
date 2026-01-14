@@ -349,6 +349,25 @@ class Database:
         finally:
             session.close()
 
+    # Delete operations
+    def delete_exam_session(self, session_id):
+        """Delete exam session and all associated grading results"""
+        session = self.get_session()
+        try:
+            # Delete all grading results for this session
+            session.query(GradingResult).filter_by(session_id=session_id).delete()
+
+            # Delete the exam session
+            session.query(ExamSession).filter_by(id=session_id).delete()
+
+            session.commit()
+            return True
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+
     # Analytics
     def get_analytics(self):
         session = self.get_session()

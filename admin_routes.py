@@ -164,6 +164,17 @@ def api_exam_detail(session_id):
         })
 
 
+@admin_bp.route('/exam/<int:session_id>/delete', methods=['POST'])
+@admin_required
+def delete_exam(session_id):
+    """Delete an exam session and all associated data"""
+    try:
+        db.delete_exam_session(session_id)
+        return jsonify({'success': True, 'message': 'Exam deleted successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @admin_bp.route('/prompts')
 @admin_required
 def prompts():

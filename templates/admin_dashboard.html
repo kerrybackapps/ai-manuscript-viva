@@ -132,6 +132,20 @@
         .btn:hover {
             transform: translateY(-2px);
         }
+        .btn-danger {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .btn-danger:hover {
+            background: #c53030;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -196,11 +210,14 @@
                 </thead>
                 <tbody>
                     {% for session in sessions %}
-                    <tr>
+                    <tr id="exam-row-{{ session.id }}">
                         <td><strong>{{ session.student_name }}</strong></td>
                         <td>{{ session.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                         <td>
-                            <a href="/admin/exam/{{ session.id }}" class="btn btn-primary">View Details</a>
+                            <div class="action-buttons">
+                                <a href="/admin/exam/{{ session.id }}" class="btn btn-primary">View Details</a>
+                                <button onclick="deleteExam({{ session.id }}, '{{ session.student_name }}')" class="btn btn-danger">Delete</button>
+                            </div>
                         </td>
                     </tr>
                     {% else %}
@@ -214,5 +231,41 @@
             </table>
         </div>
     </div>
+
+    <script>
+        async function deleteExam(sessionId, studentName) {
+            if (!confirm(`Are you sure you want to delete the exam for ${studentName}?\n\nThis will permanently delete:\n- The exam session\n- All grading results\n- All associated data\n\nThis action cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/exam/${sessionId}/delete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Remove the row from the table
+                    const row = document.getElementById(`exam-row-${sessionId}`);
+                    if (row) {
+                        row.remove();
+                    }
+
+                    // Refresh the page to update statistics
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    alert(`Error deleting exam: ${data.error}`);
+                }
+            } catch (error) {
+                alert(`Error deleting exam: ${error.message}`);
+            }
+        }
+    </script>
 </body>
 </html>
