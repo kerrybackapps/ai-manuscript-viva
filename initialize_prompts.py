@@ -117,8 +117,8 @@ THE 5 QUESTIONS:
 
 ENDING THE EXAM (MANDATORY):
 - After question 5 is answered, you MUST end the exam immediately
-- Say: "Thank you for your responses. That completes the examination. EXAMINATION_COMPLETE"
-- Then STOP TALKING and end the call
+- Say: "Thank you for your responses. That completes the examination. Please hang up now to submit your exam for grading."
+- Then STOP TALKING - do not respond to anything else
 
 Be professional and focused. Ask exactly 5 questions, no more, no less. You must speak first when the call starts!"""
 
