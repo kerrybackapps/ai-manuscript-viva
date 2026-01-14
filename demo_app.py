@@ -149,9 +149,107 @@ def exam_page(session_id):
         return "Exam session not found", 404
 
 
+@app.route('/webhook/elevenlabs', methods=['POST'])
+def elevenlabs_webhook():
+    """Handle ElevenLabs conversation completion webhook"""
+    try:
+        from elevenlabs.client import ElevenLabs
+        import json
+
+        # Get webhook data
+        data = request.get_json()
+        print(f"[WEBHOOK] Received: {json.dumps(data, indent=2)}")
+
+        # Extract conversation ID from webhook
+        conversation_id = data.get('conversation_id') or data.get('conversationId')
+        agent_id = data.get('agent_id') or data.get('agentId')
+
+        if not conversation_id:
+            print("[WEBHOOK ERROR] No conversation_id in webhook data")
+            return jsonify({'error': 'No conversation_id'}), 400
+
+        print(f"[WEBHOOK] Processing conversation: {conversation_id}")
+
+        # Find exam session by conversation_id (need to add this field to database)
+        # For now, find most recent pending exam
+        exams = db.get_all_exams(limit=10)
+        exam = next((e for e in exams if e.get('status') == 'pending'), None)
+
+        if not exam:
+            print("[WEBHOOK ERROR] No pending exam session found")
+            return jsonify({'error': 'No matching exam session'}), 404
+
+        session_id = exam['id']
+        print(f"[WEBHOOK] Matched to exam session {session_id}")
+
+        # Fetch transcript from ElevenLabs
+        elevenlabs_client = ElevenLabs(api_key=os.getenv('ELEVENLABS_API_KEY'))
+
+        try:
+            # Get conversation history
+            conversation = elevenlabs_client.conversational_ai.get_conversation(conversation_id)
+
+            # Extract transcript
+            transcript_lines = []
+            for message in conversation.get('messages', []):
+                role = message.get('role', 'unknown')
+                content = message.get('message', '')
+                transcript_lines.append(f"{role.upper()}: {content}")
+
+            oral_transcript = "\n\n".join(transcript_lines)
+            print(f"[WEBHOOK] Extracted transcript: {len(oral_transcript)} chars")
+
+        except Exception as e:
+            print(f"[WEBHOOK ERROR] Failed to fetch transcript: {e}")
+            # Use placeholder if fetch fails
+            oral_transcript = f"[Transcript fetch failed: {str(e)}]"
+
+        # Update exam session with transcript
+        db.update_exam_session(
+            session_id,
+            oral_transcript=oral_transcript,
+            status='completed',
+            completed_at=datetime.now()
+        )
+        print(f"[WEBHOOK] Updated exam session {session_id}")
+
+        # Trigger grading automatically
+        try:
+            results = system.grade_manuscript_and_oral(session_id)
+            if results:
+                print(f"[WEBHOOK] Grading completed successfully for session {session_id}")
+                return jsonify({
+                    'success': True,
+                    'session_id': session_id,
+                    'grading_triggered': True
+                })
+            else:
+                print(f"[WEBHOOK ERROR] Grading failed for session {session_id}")
+                return jsonify({
+                    'success': True,
+                    'session_id': session_id,
+                    'grading_triggered': False,
+                    'error': 'Grading failed'
+                })
+        except Exception as grading_error:
+            print(f"[WEBHOOK ERROR] Grading exception: {grading_error}")
+            return jsonify({
+                'success': True,
+                'session_id': session_id,
+                'grading_triggered': False,
+                'error': str(grading_error)
+            }), 500
+
+    except Exception as e:
+        print(f"[WEBHOOK ERROR] Exception: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/grade/<int:session_id>', methods=['POST'])
 def grade_exam(session_id):
-    """Grade the completed exam"""
+    """Grade the completed exam (manual trigger or backup)"""
     try:
         results = system.grade_manuscript_and_oral(session_id)
         if results:
