@@ -454,3 +454,75 @@ def edit_setting(setting_key):
                          display_name=setting_key.replace('_', ' ').title(),
                          value=setting_data['value'],
                          description=setting_data.get('description', ''))
+
+
+@admin_bp.route('/test-transcript', methods=['GET'])
+@admin_required
+def test_transcript():
+    """Test endpoint for ElevenLabs transcript retrieval"""
+    from elevenlabs.client import ElevenLabs
+
+    try:
+        elevenlabs_client = ElevenLabs(api_key=os.getenv('ELEVENLABS_API_KEY'))
+        agent_id = os.getenv('ELEVENLABS_AGENT_ID')
+
+        # List recent conversations
+        conversations_response = elevenlabs_client.conversational_ai.conversations.list(agent_id=agent_id)
+
+        # Extract conversations from tuple if needed
+        if isinstance(conversations_response, tuple):
+            conversations = list(conversations_response[1]) if len(conversations_response) > 1 else []
+        else:
+            conversations = list(conversations_response) if conversations_response else []
+
+        results = []
+        for conv in conversations[:3]:  # Test first 3 conversations
+            conv_id = conv.conversation_id if hasattr(conv, 'conversation_id') else conv.get('conversation_id')
+
+            # Fetch full conversation
+            conversation = elevenlabs_client.conversational_ai.conversations.get(conversation_id=conv_id)
+
+            # Extract transcript
+            transcript_lines = []
+            transcript_entries = None
+
+            if hasattr(conversation, 'transcript'):
+                transcript_entries = conversation.transcript
+            elif isinstance(conversation, dict) and 'transcript' in conversation:
+                transcript_entries = conversation['transcript']
+
+            if transcript_entries:
+                for entry in transcript_entries:
+                    role = None
+                    content = None
+
+                    if hasattr(entry, 'role'):
+                        role = entry.role
+                        content = entry.message if hasattr(entry, 'message') else None
+                    elif isinstance(entry, dict):
+                        role = entry.get('role')
+                        content = entry.get('message')
+
+                    if role and content:
+                        transcript_lines.append(f"{role.upper()}: {content[:100]}...")  # First 100 chars
+
+            results.append({
+                'conversation_id': conv_id,
+                'transcript_count': len(transcript_lines),
+                'sample': transcript_lines[:2] if transcript_lines else ['No transcript entries']
+            })
+
+        return jsonify({
+            'success': True,
+            'agent_id': agent_id,
+            'conversations_found': len(conversations),
+            'tested': results
+        })
+
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
